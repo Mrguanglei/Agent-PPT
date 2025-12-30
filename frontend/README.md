@@ -170,7 +170,7 @@ frontend/
 - **Agent**: `/api/agent/conversations`
 
 ### WebSocket
-- **连接**: `ws://localhost:8000/api/agent/ws/{conversationId}`
+- **连接**: `ws://localhost:18000/api/agent/ws/{conversationId}`
 - **消息类型**:
   - `message`: 文本消息
   - `tool_call_start`: 工具调用开始
@@ -254,8 +254,8 @@ npm run test:e2e
 
 ### 环境变量
 ```env
-VITE_API_BASE_URL=http://localhost:8000
-VITE_WS_BASE_URL=ws://localhost:8000
+VITE_API_BASE_URL=http://localhost:18000
+VITE_WS_BASE_URL=ws://localhost:18000
 ```
 
 ### Docker 部署

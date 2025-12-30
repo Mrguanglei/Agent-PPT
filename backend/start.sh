@@ -30,5 +30,5 @@ echo "🌟 Starting application..."
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 echo "✅ PPT Agent Backend started successfully!"
-echo "📖 API Documentation: http://localhost:8000/api/docs"
-echo "🎯 Admin Interface: http://localhost:9001 (MinIO)"
+echo "📖 API Documentation: http://localhost:18000/api/docs"
+echo "🎯 Admin Interface: http://localhost:19001 (MinIO)"

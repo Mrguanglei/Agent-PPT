@@ -83,7 +83,7 @@ SECRET_KEY=your-256-bit-key   # JWT签名密钥
 ```bash
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
-MINIO_ENDPOINT=localhost:9000
+MINIO_ENDPOINT=localhost:19000
 ```
 
 ## 🚀 使用指南
@@ -145,10 +145,11 @@ docker-compose -f docker-compose.prod.yml exec backend alembic upgrade head
 
 ## 📊 访问地址
 
-- **应用首页**: http://localhost
-- **API 文档**: http://localhost/api/docs
-- **MinIO 控制台**: http://localhost:9000 (admin/minioadmin)
-- **Grafana**: http://localhost:3000 (admin/admin)
+- **应用首页**: http://localhost:8090
+- **API 文档**: http://localhost:18000/api/docs
+- **MinIO 控制台**: http://localhost:19000 (admin/minioadmin)
+- **Grafana**: http://localhost:13000 (admin/admin)
+- **Prometheus**: http://localhost:19090
 
 ## 🐛 故障排除
 
@@ -159,7 +160,7 @@ docker-compose -f docker-compose.prod.yml exec backend alembic upgrade head
 # 检查端口占用
 sudo lsof -i :5432
 sudo lsof -i :6379
-sudo lsof -i :8000
+sudo lsof -i :18000
 
 # 修改 docker-compose.yml 中的端口映射
 ```

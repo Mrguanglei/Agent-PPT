@@ -1,5 +1,5 @@
 # Multi-stage build for React frontend
-FROM node:18-alpine as builder
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:18-alpine as builder
 
 # Set working directory
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Production stage with Nginx
-FROM nginx:1.25-alpine
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nginx:1.25-alpine
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html

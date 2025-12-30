@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost/ppt_agent"
 
     # Redis 配置
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:16379/0"
 
     # JWT 配置
     SECRET_KEY: str = "your-secret-key-here"
@@ -36,9 +36,9 @@ class Settings(BaseSettings):
 
     # CORS 配置
     CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
+        "http://localhost:8090",
         "http://localhost:5173",
-        "https://localhost:3000",
+        "https://localhost:8090",
         "https://localhost:5173",
     ]
 
@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "/tmp/uploads"
 
     # MinIO 配置 (对象存储)
-    MINIO_ENDPOINT: str = "localhost:9000"
+    MINIO_ENDPOINT: str = "localhost:19000"
     MINIO_ACCESS_KEY: str = ""
     MINIO_SECRET_KEY: str = ""
     MINIO_SECURE: bool = False

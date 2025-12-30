@@ -110,7 +110,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 DATABASE_URL=postgresql+asyncpg://user:password@localhost/ppt_agent
 
 # Redis
-REDIS_URL=redis://localhost:6379/0
+REDIS_URL=redis://localhost:16379/0
 
 # OpenAI
 OPENAI_API_KEY=your-openai-api-key-here
@@ -127,7 +127,7 @@ SECRET_KEY=your-secret-key-here-change-in-production
 
 ```env
 # MinIO对象存储
-MINIO_ENDPOINT=localhost:9000
+MINIO_ENDPOINT=localhost:19000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
 
@@ -140,9 +140,9 @@ PORT=8000
 ## API文档
 
 启动服务后访问：
-- **Swagger UI**: http://localhost:8000/api/docs
-- **ReDoc**: http://localhost:8000/api/redoc
-- **健康检查**: http://localhost:8000/health
+- **Swagger UI**: http://localhost:18000/api/docs
+- **ReDoc**: http://localhost:18000/api/redoc
+- **健康检查**: http://localhost:18000/health
 
 ## API端点
 
@@ -316,7 +316,7 @@ pytest tests/
 docker build -t ppt-agent-backend .
 
 # 运行容器
-docker run -p 8000:8000 --env-file .env ppt-agent-backend
+docker run -p 18000:8000 --env-file .env ppt-agent-backend
 ```
 
 ### 使用Nginx反向代理

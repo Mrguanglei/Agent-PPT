@@ -45,7 +45,7 @@ OPENAI_MODEL=glm-4
 
 # 本地部署的模型服务
 OPENAI_API_KEY=sk-local
-OPENAI_BASE_URL=http://localhost:8000/v1
+OPENAI_BASE_URL=http://localhost:18000/v1
 OPENAI_MODEL=local-model
 ```
 
@@ -140,7 +140,7 @@ print(response.choices[0].message.content)
 curl -I https://api.deepseek.com/v1
 
 # 配置代理（如果需要）
-export HTTPS_PROXY=http://proxy.company.com:8080
+export HTTPS_PROXY=http://proxy.company.com:8090
 ```
 
 #### 2. 认证失败

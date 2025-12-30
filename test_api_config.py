@@ -71,7 +71,7 @@ def show_supported_endpoints():
         ("DeepSeek", "https://api.deepseek.com/v1", "deepseek-chat"),
         ("Moonshot AI", "https://api.moonshot.cn/v1", "moonshot-v1-8k"),
         ("智谱AI", "https://open.bigmodel.cn/api/paas/v4", "glm-4"),
-        ("本地服务", "http://localhost:8000/v1", "local-model"),
+        ("本地服务", "http://localhost:18000/v1", "local-model"),
     ]
 
     for name, url, model in endpoints:

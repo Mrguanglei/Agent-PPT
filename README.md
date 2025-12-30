@@ -66,8 +66,8 @@ npm run dev
 
 ### 访问应用
 - **应用首页**: http://localhost:5173
-- **API文档**: http://localhost:8000/api/docs
-- **MinIO控制台**: http://localhost:9000
+- **API文档**: http://localhost:18000/api/docs
+- **MinIO控制台**: http://localhost:19000
 
 ## 📁 项目结构
 
@@ -154,7 +154,7 @@ Agent: "我已经为您规划了8页的演示文稿，使用现代科技风格�
 ```bash
 # 后端 (.env)
 DATABASE_URL=postgresql+asyncpg://user:password@localhost/ppt_agent
-REDIS_URL=redis://localhost:6379/0
+REDIS_URL=redis://localhost:16379/0
 OPENAI_API_KEY=your-api-key
 OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_MODEL=gpt-4-turbo-preview
@@ -166,8 +166,8 @@ SERPAPI_KEY=your-serpapi-key
 # Moonshot AI: OPENAI_BASE_URL=https://api.moonshot.cn/v1
 
 # 前端 (.env)
-VITE_API_BASE_URL=http://localhost:8000
-VITE_WS_BASE_URL=ws://localhost:8000
+VITE_API_BASE_URL=http://localhost:18000
+VITE_WS_BASE_URL=ws://localhost:18000
 ```
 
 ### 数据库初始化
@@ -190,7 +190,7 @@ POST   /api/slides/             # 创建幻灯片
 
 ### WebSocket 接口
 ```
-ws://localhost:8000/api/agent/ws/{conversation_id}
+ws://localhost:18000/api/agent/ws/{conversation_id}
 
 消息类型:
 - message: 文本消息
@@ -279,7 +279,7 @@ server {
 
     # API 代理
     location /api {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://localhost:18000;
         proxy_set_header Host $host;
     }
 }
