@@ -15,15 +15,15 @@ PPT-Agent/
 
 | 服务 | 端口 | 说明 |
 |------|------|------|
-| postgres | 5432 | PostgreSQL 数据库 |
-| redis | 6379 | Redis 缓存 |
-| minio | 9000/9001 | 对象存储 |
-| backend | 8000 | FastAPI 后端 |
+| postgres | 15432 | PostgreSQL 数据库 |
+| redis | 16379 | Redis 缓存 |
+| minio | 19000/19001 | 对象存储 |
+| backend | 18000 | FastAPI 后端 |
 | frontend | 5173 | Vite 前端 |
 | celery_worker | - | 异步任务处理器 |
-| nginx | 80 | 反向代理 |
-| prometheus | 9090 | 监控数据收集 |
-| grafana | 3000 | 监控可视化 |
+| nginx | 8090 | 反向代理 |
+| prometheus | 19090 | 监控数据收集 |
+| grafana | 13000 | 监控可视化 |
 
 ## ⚙️ 环境变量配置
 
@@ -115,19 +115,19 @@ docker-compose -f docker-compose.prod.yml exec backend alembic upgrade head
 
 ## 🔧 服务说明
 
-### 开发环境服务 (`backend/docker-compose.yml`)
+### 开发环境服务 (`docker-compose.yml`)
 
 | 服务 | 端口 | 说明 |
 |------|------|------|
-| postgres | 5432 | PostgreSQL 数据库 |
-| redis | 6379 | Redis 缓存 |
-| minio | 9000/9001 | 对象存储 |
-| backend | 8000 | FastAPI 后端 |
+| postgres | 15432 | PostgreSQL 数据库 |
+| redis | 16379 | Redis 缓存 |
+| minio | 19000/19001 | 对象存储 |
+| backend | 18000 | FastAPI 后端 |
 | frontend | 5173 | Vite 前端 |
 | celery_worker | - | 异步任务处理器 |
-| nginx | 80 | 反向代理 |
-| prometheus | 9090 | 监控数据收集 |
-| grafana | 3000 | 监控可视化 |
+| nginx | 8090 | 反向代理 |
+| prometheus | 19090 | 监控数据收集 |
+| grafana | 13000 | 监控可视化 |
 
 ### 生产环境服务 (`docker-compose.prod.yml`)
 
