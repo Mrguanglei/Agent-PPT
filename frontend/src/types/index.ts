@@ -121,7 +121,7 @@ export interface CreateConversationRequest {
   agent_state?: Record<string, any>;
 }
 
-// WebSocket Types
+// EventSource Stream Types (formerly WebSocket)
 export interface AgentStreamMessage {
   type: 'message' | 'tool_call_start' | 'tool_call_complete' | 'error';
   data: any;

@@ -1,60 +1,39 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Bell, Search, User } from 'lucide-react';
-import { useAuthStore } from '@/store';
+import { Sparkles } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
-const Header: React.FC = () => {
+export const Header: React.FC = () => {
   const { user } = useAuthStore();
 
   return (
-    <motion.header
-      className="bg-white border-b border-gray-200 px-6 py-4"
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex items-center justify-between">
-        {/* Left side - Search */}
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="搜索项目..."
-              className="input pl-10 w-full"
-            />
-          </div>
+    <header className="h-16 border-b border-gray-200 bg-white px-6 flex items-center justify-between">
+      {/* Logo区域 */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <Sparkles className="w-6 h-6 text-white" />
         </div>
-
-        {/* Right side - Actions */}
-        <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors relative">
-            <Bell className="w-5 h-5" />
-            {/* Notification badge */}
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              3
-            </span>
-          </button>
-
-          {/* User Menu */}
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">
-                {user?.username}
-              </div>
-              <div className="text-xs text-gray-500">
-                {user?.email}
-              </div>
-            </div>
-            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-primary-600" />
-            </div>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">PPT Agent</h1>
+          <p className="text-xs text-gray-500">智能演示文稿生成器</p>
         </div>
       </div>
-    </motion.header>
+
+      {/* 右侧用户区域 */}
+      <div className="flex items-center gap-4">
+        <button className="text-sm text-gray-600 hover:text-gray-900">
+          使用指南
+        </button>
+
+        {/* 用户菜单 */}
+        <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+            {user?.username?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '张'}
+          </div>
+          <span className="text-sm font-medium text-gray-700">
+            {user?.username || '张三'}
+          </span>
+        </div>
+      </div>
+    </header>
   );
 };
-
-export default Header;

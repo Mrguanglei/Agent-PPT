@@ -1,6 +1,6 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from uuid import UUID
 from app.models.conversation import Conversation, AgentLog
 from app.schemas.agent import ConversationCreate, AgentLogBase
@@ -121,3 +121,26 @@ class AgentService:
             .limit(limit)
         )
         return list(result.scalars().all())
+
+    @classmethod
+    async def delete_conversation(
+        cls,
+        db: AsyncSession,
+        conversation_id: UUID,
+        user_id: UUID
+    ) -> bool:
+        """删除对话"""
+        # 首先检查对话是否存在且属于该用户
+        conversation = await cls.get_conversation(db, conversation_id, user_id)
+        if not conversation:
+            return False
+
+        # 删除对话（CASCADE会自动删除相关的AgentLog）
+        result = await db.execute(
+            delete(Conversation).where(
+                Conversation.id == conversation_id,
+                Conversation.user_id == user_id
+            )
+        )
+        await db.commit()
+        return result.rowcount > 0

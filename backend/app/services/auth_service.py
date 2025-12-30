@@ -18,12 +18,16 @@ class AuthService:
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """验证密码"""
-        return pwd_context.verify(plain_password, hashed_password)
+        # bcrypt限制密码不能超过72字节，截断过长的密码进行验证
+        truncated_password = plain_password[:72]  # 简单截断前72个字符
+        return pwd_context.verify(truncated_password, hashed_password)
 
     @staticmethod
     def get_password_hash(password: str) -> str:
         """获取密码哈希"""
-        return pwd_context.hash(password)
+        # bcrypt限制密码不能超过72字节，截断过长的密码
+        truncated_password = password[:72]  # 简单截断前72个字符
+        return pwd_context.hash(truncated_password)
 
     @staticmethod
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):

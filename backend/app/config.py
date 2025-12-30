@@ -40,6 +40,10 @@ class Settings(BaseSettings):
         "http://localhost:15173",
         "https://localhost:8090",
         "https://localhost:15173",
+        "http://127.0.0.1:15173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "*",  # 开发环境允许所有源
     ]
 
     # 文件上传配置

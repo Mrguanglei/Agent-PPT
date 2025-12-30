@@ -1,32 +1,25 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import Sidebar from './Sidebar';
-import Header from './Header';
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+import { ChatWorkspace } from '../Chat/ChatWorkspace';
+import { DetailPanel } from '../DetailPanel/DetailPanel';
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout: React.FC = () => {
   return (
-    <div className="h-screen flex bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="h-screen bg-gray-50">
+      {/* 顶部导航栏 */}
+      <Header />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <Header />
+      {/* 主体内容区 */}
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* 左侧边栏 - 对话列表 */}
+        <Sidebar />
 
-        {/* Page Content */}
-        <motion.main
-          className="flex-1 overflow-y-auto p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {children}
-        </motion.main>
+        {/* 中间主对话区 */}
+        <ChatWorkspace />
+
+        {/* 右侧详情面板 */}
+        <DetailPanel />
       </div>
     </div>
   );

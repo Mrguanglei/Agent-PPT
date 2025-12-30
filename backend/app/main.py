@@ -1,9 +1,10 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 import logging
 import sentry_sdk
+from typing import Dict, List
 
 from app.config import settings
 from app.api import auth_router, projects_router, slides_router, agent_router
@@ -35,7 +36,7 @@ app = FastAPI(
 # CORS 中间件
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],  # 临时允许所有源用于调试
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,13 +45,9 @@ app.add_middleware(
 # Gzip 压缩
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Prometheus 指标 (可选)
-if settings.ENABLE_METRICS:
-    from prometheus_fastapi_instrumentator import Instrumentator
 
-    @app.on_event("startup")
-    async def startup():
-        Instrumentator().instrument(app).expose(app)
+# 已移除WebSocket连接管理，使用SSE + Redis PubSub架构
+
 
 # 全局异常处理
 @app.exception_handler(Exception)
@@ -65,6 +62,8 @@ async def global_exception_handler(request, exc):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# 已移除Socket.IO测试端点
 
 # 路由注册
 app.include_router(auth_router, prefix="/api/auth", tags=["认证"])
@@ -84,3 +83,10 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("Application shutting down...")
+
+# 已移除WebSocket路由，使用SSE + Redis PubSub架构
+
+# CORS测试端点
+@app.get("/api/test")
+async def cors_test():
+    return {"message": "CORS is working!", "timestamp": "2024-01-01"}

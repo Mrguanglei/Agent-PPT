@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import type { AgentState, Message, ToolCallState, Conversation } from '@/types';
+import type { AgentState, Message, ToolCallState } from '@/types';
 import { agentApi } from '@/services/api';
-import { agentWebSocket } from '@/services/websocket';
+import { agentEventSource } from '@/services/eventsource';
 import toast from 'react-hot-toast';
 
-export const useAgentStore = create<AgentState>((set, get) => ({
+export const useAgentStore = create<AgentState>((set: any, get: any) => ({
   messages: [],
   currentConversationId: null,
   isProcessing: false,
@@ -13,12 +13,12 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   sendMessage: async (message: string, projectId?: string) => {
     const { currentConversationId } = get();
 
+    // 如果没有对话ID，抛出错误而不是自动创建
     if (!currentConversationId) {
-      await get().createConversation(projectId);
+      throw new Error('No conversation selected');
     }
 
-    const conversationId = get().currentConversationId;
-    if (!conversationId) return;
+    const conversationId = currentConversationId;
 
     // Add user message
     const userMessage: Message = {
@@ -28,14 +28,20 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       timestamp: new Date(),
     };
 
-    set(state => ({
+    set((state: any) => ({
       messages: [...state.messages, userMessage],
       isProcessing: true,
     }));
 
     try {
-      // Send message via WebSocket
-      agentWebSocket.sendMessage(message, projectId);
+      // 发送消息到后端API（异步处理）
+      await agentApi.sendMessage(conversationId, {
+        message,
+        project_id: projectId,
+      });
+
+      // 连接EventSource监听响应
+      agentEventSource.connect(conversationId);
 
       // Set up message handler for responses
       const handleMessage = (streamMessage: any) => {
@@ -48,7 +54,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
             timestamp: new Date(),
           };
 
-          set(state => ({
+          set((state: any) => ({
             messages: [...state.messages, assistantMessage],
           }));
         } else if (streamMessage.type === 'tool_call_start') {
@@ -69,12 +75,12 @@ export const useAgentStore = create<AgentState>((set, get) => ({
             toolCall,
           };
 
-          set(state => ({
+          set((state: any) => ({
             messages: [...state.messages, toolMessage],
           }));
         } else if (streamMessage.type === 'tool_call_complete') {
           // Update tool call completion
-          set(state => ({
+          set((state: any) => ({
             currentToolCall: state.currentToolCall ? {
               ...state.currentToolCall,
               status: 'completed',
@@ -84,8 +90,8 @@ export const useAgentStore = create<AgentState>((set, get) => ({
           }));
 
           // Update last tool message
-          set(state => ({
-            messages: state.messages.map(msg =>
+          set((state: any) => ({
+            messages: state.messages.map((msg: any) =>
               msg.toolCall ? {
                 ...msg,
                 content: `${streamMessage.data.tool} 执行完成`,
@@ -103,12 +109,12 @@ export const useAgentStore = create<AgentState>((set, get) => ({
         }
       };
 
-      agentWebSocket.addMessageHandler(handleMessage);
+      agentEventSource.addMessageHandler(handleMessage);
 
-      // Clean up handler after processing
+      // Clean up handler after processing (longer timeout for async processing)
       setTimeout(() => {
-        agentWebSocket.removeMessageHandler(handleMessage);
-      }, 30000); // 30 second timeout
+        agentEventSource.removeMessageHandler(handleMessage);
+      }, 120000); // 2 minute timeout for async processing
 
     } catch (error: any) {
       console.error('Failed to send message:', error);
@@ -128,8 +134,8 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       const conversationId = response.data.id;
       set({ currentConversationId: conversationId });
 
-      // Connect WebSocket
-      agentWebSocket.connect(conversationId);
+      // Connect EventSource
+      agentEventSource.connect(conversationId);
 
       return conversationId;
     } catch (error: any) {
@@ -146,6 +152,6 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       isProcessing: false,
       currentToolCall: null,
     });
-    agentWebSocket.disconnect();
+    agentEventSource.disconnect();
   },
 }));

@@ -1,5 +1,5 @@
 from openai import AsyncOpenAI
-from typing import AsyncGenerator, Dict, Any, List
+from typing import AsyncGenerator, Dict, Any, List, Optional
 import json
 import logging
 import time
@@ -7,6 +7,7 @@ from app.config import settings
 from app.agent.tools import TOOLS_REGISTRY
 from app.agent.prompts import SYSTEM_PROMPT
 from app.services.agent_service import AgentService
+from app.services.redis_service import RedisPubSubService
 from app.database import get_db
 from app.schemas.agent import AgentLogBase
 
@@ -16,13 +17,15 @@ logger = logging.getLogger(__name__)
 class PPTAgent:
     """PPT 生成 Agent 核心"""
 
-    def __init__(self):
+    def __init__(self, redis_service: Optional[RedisPubSubService] = None, conversation_id: Optional[str] = None):
         self.client = AsyncOpenAI(
             api_key=settings.OPENAI_API_KEY,
             base_url=settings.OPENAI_BASE_URL
         )
         self.model = settings.OPENAI_MODEL
         self.tools = self._register_tools()
+        self.redis_service = redis_service
+        self.conversation_id = conversation_id
 
     def _register_tools(self) -> List[Dict]:
         """注册所有工具"""
@@ -410,7 +413,7 @@ class PPTAgent:
         user_message: str,
         conversation_history: List[Dict],
         conversation_id: str = None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> List[Dict]:
         """
         流式处理用户请求
 
@@ -420,8 +423,7 @@ class PPTAgent:
             conversation_history: 对话历史
             conversation_id: 对话ID
 
-        Yields:
-            消息块字典
+        注意：消息通过Redis发布，不再yield
         """
         try:
             # 构建消息
@@ -443,119 +445,176 @@ class PPTAgent:
 
             current_tool_call = None
             collected_messages = []
+            assistant_messages = []  # 用于收集助手的完整回复
 
             async for chunk in response:
-                choice = chunk.choices[0]
-                delta = choice.delta
+                try:
+                    # 调试：打印原始chunk
+                    logger.info(f"Raw chunk: {chunk}")
 
-                # 处理文本内容
-                if delta.content:
-                    collected_messages.append(delta.content)
-                    yield {
-                        "type": "message",
-                        "data": {"content": delta.content}
-                    }
+                    # 检查chunk结构
+                    if not hasattr(chunk, 'choices') or not chunk.choices:
+                        logger.warning(f"Chunk has no choices: {chunk}")
+                        continue
 
-                # 处理工具调用
-                if delta.tool_calls:
-                    for tool_call in delta.tool_calls:
-                        if not current_tool_call:
-                            current_tool_call = {
-                                "id": tool_call.id,
-                                "name": tool_call.function.name,
-                                "arguments": ""
-                            }
+                    choice = chunk.choices[0]
+                    delta = getattr(choice, 'delta', None)
 
-                            # think工具不显示给用户
-                            if tool_call.function.name != "think":
-                                yield {
-                                    "type": "tool_call_start",
-                                    "data": {"tool": tool_call.function.name}
+                    # 调试：打印解析后的数据
+                    logger.info(f"Choice: {choice}")
+                    logger.info(f"Delta: {delta}")
+                    logger.info(f"Delta type: {type(delta)}")
+                    logger.info(f"Delta attributes: {dir(delta) if delta else 'None'}")
+
+                    # 处理文本内容 - 支持豆包API的特殊格式
+                    content_to_send = None
+                    if delta:
+                        # 豆包API使用reasoning_content
+                        if hasattr(delta, 'reasoning_content') and delta.reasoning_content is not None:
+                            content_to_send = delta.reasoning_content
+                        # OpenAI标准API使用content
+                        elif hasattr(delta, 'content') and delta.content is not None:
+                            content_to_send = delta.content
+
+                    if content_to_send:
+                        collected_messages.append(content_to_send)
+                        # 发布消息到Redis
+                        if self.redis_service and self.conversation_id:
+                            await self.redis_service.publish_message(
+                                f"conversation:{self.conversation_id}",
+                                {
+                                    "type": "message",
+                                    "data": {"content": content_to_send}
                                 }
-
-                        if tool_call.function.arguments:
-                            current_tool_call["arguments"] += tool_call.function.arguments
-
-                # 工具调用完成
-                if choice.finish_reason == "tool_calls" and current_tool_call:
-                    # 执行工具
-                    start_time = time.time()
-                    tool_result = await self._execute_tool(
-                        current_tool_call["name"],
-                        json.loads(current_tool_call["arguments"]),
-                        project_id
-                    )
-                    execution_time = time.time() - start_time
-
-                    # think工具的结果不显示给用户，但需要在think后向用户说明下一步行动
-                    if current_tool_call["name"] != "think":
-                        yield {
-                            "type": "tool_call_complete",
-                            "data": {
-                                "tool": current_tool_call["name"],
-                                "result": tool_result
-                            }
-                        }
-                    else:
-                        # think工具完成后，向用户说明下一步行动
-                        if "ppt_planning" in tool_result and tool_result["ppt_planning"]:
-                            yield {
-                                "type": "message",
-                                "data": {
-                                    "content": f"我已经完成了PPT制作规划。根据您的需求，我将创建一个{tool_result.get('total_pages', '多页')}的演示文稿，使用{tool_result.get('selected_color_scheme', '现代')}配色方案和{tool_result.get('selected_font_scheme', '专业')}字体风格。现在开始生成PPT内容..."
-                                }
-                            }
-
-                    # 记录工具执行日志 (think工具也记录)
-                    if conversation_id:
-                        async with get_db() as db:
-                            await AgentService.create_agent_log(
-                                db,
-                                conversation_id,
-                                AgentLogBase(
-                                    tool_name=current_tool_call["name"],
-                                    tool_params=json.loads(current_tool_call["arguments"]),
-                                    tool_result=tool_result,
-                                    execution_time=execution_time,
-                                    status="success" if tool_result.get("success", True) else "failed",
-                                    error_message=str(tool_result.get("error")) if tool_result.get("error") else None
-                                )
                             )
 
-                    # 将工具结果添加到消息历史并继续对话
-                    messages.append({
-                        "role": "assistant",
-                        "tool_calls": [{
-                            "id": current_tool_call["id"],
-                            "type": "function",
-                            "function": {
-                                "name": current_tool_call["name"],
-                                "arguments": current_tool_call["arguments"]
-                            }
-                        }]
-                    })
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": current_tool_call["id"],
-                        "content": json.dumps(tool_result)
-                    })
+                    # 处理工具调用 - 更安全的检查
+                    if delta and hasattr(delta, 'tool_calls') and delta.tool_calls:
+                        for tool_call in delta.tool_calls:
+                            if not current_tool_call:
+                                current_tool_call = {
+                                    "id": getattr(tool_call, 'id', ''),
+                                    "name": getattr(getattr(tool_call, 'function', {}), 'name', ''),
+                                    "arguments": ""
+                                }
 
-                    # 继续对话
-                    current_tool_call = None
-                    response = await self.client.chat.completions.create(
-                        model=self.model,
-                        messages=messages,
-                        tools=self.tools,
-                        tool_choice="auto",
-                        stream=True
-                    )
+                                # think工具不显示给用户
+                                if current_tool_call["name"] != "think":
+                                    # 发布消息到Redis
+                                    if self.redis_service and self.conversation_id:
+                                        await self.redis_service.publish_message(
+                                            f"conversation:{self.conversation_id}",
+                                            {
+                                                "type": "tool_call_start",
+                                                "data": {"tool": current_tool_call["name"]}
+                                            }
+                                        )
+
+                            tool_func = getattr(tool_call, 'function', None)
+                            if tool_func and hasattr(tool_func, 'arguments') and tool_func.arguments:
+                                current_tool_call["arguments"] += tool_func.arguments
+
+                    # 工具调用完成
+                    if hasattr(choice, 'finish_reason') and choice.finish_reason == "tool_calls" and current_tool_call:
+                        # 执行工具
+                        start_time = time.time()
+                        tool_result = await self._execute_tool(
+                            current_tool_call["name"],
+                            json.loads(current_tool_call["arguments"]),
+                            project_id
+                        )
+                        execution_time = time.time() - start_time
+
+                        # think工具的结果不显示给用户，但需要在think后向用户说明下一步行动
+                        if current_tool_call["name"] != "think":
+                            # 发布消息到Redis
+                            if self.redis_service and self.conversation_id:
+                                await self.redis_service.publish_message(
+                                    f"conversation:{self.conversation_id}",
+                                    {
+                                        "type": "tool_call_complete",
+                                        "data": {
+                                            "tool": current_tool_call["name"],
+                                            "result": tool_result
+                                        }
+                                    }
+                                )
+                        else:
+                            # think工具完成后，向用户说明下一步行动
+                            if "ppt_planning" in tool_result and tool_result["ppt_planning"]:
+                                if self.redis_service and self.conversation_id:
+                                    await self.redis_service.publish_message(
+                                        f"conversation:{self.conversation_id}",
+                                        {
+                                            "type": "message",
+                                            "data": {
+                                                "content": f"我已经完成了PPT制作规划。根据您的需求，我将创建一个{tool_result.get('total_pages', '多页')}的演示文稿，使用{tool_result.get('selected_color_scheme', '现代')}配色方案和{tool_result.get('selected_font_scheme', '专业')}字体风格。现在开始生成PPT内容..."
+                                            }
+                                        }
+                                    )
+
+                        # 记录工具执行日志 (think工具也记录)
+                        if conversation_id:
+                            async with get_db() as db:
+                                await AgentService.create_agent_log(
+                                    db,
+                                    conversation_id,
+                                    AgentLogBase(
+                                        tool_name=current_tool_call["name"],
+                                        tool_params=json.loads(current_tool_call["arguments"]),
+                                        tool_result=tool_result,
+                                        execution_time=execution_time,
+                                        status="success" if tool_result.get("success", True) else "failed",
+                                        error_message=str(tool_result.get("error")) if tool_result.get("error") else None
+                                    )
+                                )
+
+                        # 将工具结果添加到消息历史并继续对话
+                        messages.append({
+                            "role": "assistant",
+                            "tool_calls": [{
+                                "id": current_tool_call["id"],
+                                "type": "function",
+                                "function": {
+                                    "name": current_tool_call["name"],
+                                    "arguments": current_tool_call["arguments"]
+                                }
+                            }]
+                        })
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": current_tool_call["id"],
+                            "content": json.dumps(tool_result)
+                        })
+
+                        # 继续对话
+                        current_tool_call = None
+
+                except Exception as e:
+                    logger.error(f"Error processing chunk: {e}")
+                    logger.error(f"Chunk data: {chunk}")
+                    continue
 
         except Exception as e:
             logger.error(f"Agent processing error: {e}", exc_info=True)
-            yield {
-                "type": "error",
-                "data": {"message": str(e)}
-            }
+            # 发布错误消息到Redis
+            if self.redis_service and self.conversation_id:
+                await self.redis_service.publish_message(
+                    f"conversation:{self.conversation_id}",
+                    {
+                        "type": "error",
+                        "data": {"message": str(e)}
+                    }
+                )
+
+        # 更新对话历史
+        if collected_messages:
+            conversation_history.append({
+                "role": "assistant",
+                "content": "".join(collected_messages)
+            })
+
+        return conversation_history
 
     async def _execute_tool(
         self,

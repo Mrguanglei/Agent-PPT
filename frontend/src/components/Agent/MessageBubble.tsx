@@ -1,57 +1,68 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { User, Bot } from 'lucide-react';
-import type { Message } from '@/types';
-import clsx from 'clsx';
+import { Bot, User } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface MessageBubbleProps {
-  message: Message;
+  message: {
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+  };
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
-  const isUser = message.type === 'user';
+export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
+  const isUser = message.role === 'user';
 
   return (
-    <motion.div
-      className={clsx(
-        'flex gap-4 max-w-4xl',
-        isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
-      )}
-      initial={{ opacity: 0, x: isUser ? 20 : -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Avatar */}
-      <div className={clsx(
-        'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-        isUser ? 'bg-primary-600' : 'bg-success-600'
-      )}>
+    <div className={`flex gap-4 ${isUser ? 'flex-row-reverse' : ''}`}>
+      {/* 头像 */}
+      <div className={`
+        w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+        ${isUser
+          ? 'bg-gradient-to-br from-green-400 to-blue-500'
+          : 'bg-gradient-to-br from-blue-500 to-purple-600'
+        }
+      `}>
         {isUser ? (
-          <User className="w-4 h-4 text-white" />
+          <User className="w-5 h-5 text-white" />
         ) : (
-          <Bot className="w-4 h-4 text-white" />
+          <Bot className="w-5 h-5 text-white" />
         )}
       </div>
 
-      {/* Message Content */}
-      <div className={clsx(
-        'rounded-lg px-4 py-3 max-w-2xl break-words',
-        isUser
-          ? 'bg-primary-600 text-white'
-          : 'bg-gray-100 text-gray-900'
-      )}>
-        {/* Message Text */}
-        <div className="whitespace-pre-wrap">{message.content}</div>
+      {/* 消息内容 */}
+      <div className={`flex-1 max-w-3xl ${isUser ? 'flex justify-end' : ''}`}>
+        <div className={`
+          rounded-2xl px-4 py-3
+          ${isUser
+            ? 'bg-blue-600 text-white'
+            : 'bg-white border border-gray-200 text-gray-900'
+          }
+        `}>
+          <ReactMarkdown
+            className="prose prose-sm max-w-none"
+            components={{
+              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+              code: ({ children }) => (
+                <code className={`px-1 py-0.5 rounded ${isUser ? 'bg-blue-700' : 'bg-gray-100'}`}>
+                  {children}
+                </code>
+              )
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
+        </div>
 
-        {/* Timestamp */}
-        <div className={clsx(
-          'text-xs mt-2',
-          isUser ? 'text-primary-100' : 'text-gray-500'
-        )}>
-          {message.timestamp.toLocaleTimeString()}
+        {/* 时间戳 */}
+        <div className={`text-xs text-gray-400 mt-1 px-1 ${isUser ? 'text-right' : ''}`}>
+          {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
