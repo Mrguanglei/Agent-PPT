@@ -19,7 +19,7 @@ PPT-Agent/
 | redis | 16379 | Redis 缓存 |
 | minio | 19000/19001 | 对象存储 |
 | backend | 18000 | FastAPI 后端 |
-| frontend | 5173 | Vite 前端 |
+| frontend | 15173 | Vite 前端 |
 | celery_worker | - | 异步任务处理器 |
 | nginx | 8090 | 反向代理 |
 | prometheus | 19090 | 监控数据收集 |

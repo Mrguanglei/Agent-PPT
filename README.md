@@ -65,7 +65,7 @@ npm run dev
 ```
 
 ### 访问应用
-- **应用首页**: http://localhost:5173
+- **应用首页**: http://localhost:15173
 - **API文档**: http://localhost:18000/api/docs
 - **MinIO控制台**: http://localhost:19000
 

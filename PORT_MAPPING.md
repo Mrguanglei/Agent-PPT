@@ -13,7 +13,7 @@
 | **MinIO API** | 9000 | **19000** | 对象存储API |
 | **MinIO Console** | 9001 | **19001** | 对象存储控制台 |
 | **后端API** | 8000 | **18000** | FastAPI服务 |
-| **前端应用** | 5173 | **5173** | React开发服务器 |
+| **前端应用** | **15173** | 5173 | React开发服务器 |
 | **Nginx** | 80 | **8090** | 反向代理 |
 | **Prometheus** | 9090 | **19090** | 监控数据收集 |
 | **Grafana** | 3000 | **13000** | 监控可视化 |
@@ -27,7 +27,7 @@
 | MinIO API | 19000 | 9000 | 对象存储API |
 | MinIO Console | 19001 | 9001 | 对象存储控制台 |
 | 后端API | 18000 | 8000 | FastAPI服务 |
-| 前端应用 | 5173 | 5173 | React开发服务器 |
+| 前端应用 | **15173** | 5173 | React开发服务器 |
 | Nginx | 8090 | 80 | 反向代理 |
 | Prometheus | 19090 | 9090 | 监控数据收集 |
 | Grafana | 13000 | 3000 | 监控可视化 |
@@ -36,6 +36,7 @@
 
 ### 开发环境
 - **应用首页**: http://localhost:8090
+- **前端开发服务器**: http://localhost:15173
 - **API 文档**: http://localhost:18000/api/docs
 - **MinIO 控制台**: http://localhost:19000 (admin/minioadmin)
 - **Grafana**: http://localhost:13000 (admin/admin)
@@ -73,9 +74,9 @@ VITE_WS_BASE_URL=ws://localhost:18000
 ```python
 CORS_ORIGINS=[
     "http://localhost:8090",
-    "http://localhost:5173",
+    "http://localhost:15173",
     "https://localhost:8090",
-    "https://localhost:5173"
+    "https://localhost:15173"
 ]
 ```
 
@@ -108,7 +109,7 @@ sudo lsof -i :18000
 sudo lsof -i :19000
 
 # 检查所有新端口
-for port in 15432 16379 19000 19001 18000 5173 8090 19090 13000; do
+for port in 15432 16379 19000 19001 18000 15173 8090 19090 13000; do
     if sudo lsof -i :$port > /dev/null; then
         echo "端口 $port 已被占用"
     else

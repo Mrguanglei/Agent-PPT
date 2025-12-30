@@ -37,9 +37,9 @@ class Settings(BaseSettings):
     # CORS 配置
     CORS_ORIGINS: List[str] = [
         "http://localhost:8090",
-        "http://localhost:5173",
+        "http://localhost:15173",
         "https://localhost:8090",
-        "https://localhost:5173",
+        "https://localhost:15173",
     ]
 
     # 文件上传配置

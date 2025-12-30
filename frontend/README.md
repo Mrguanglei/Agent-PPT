@@ -58,7 +58,7 @@ npm install
 npm run dev
 ```
 
-应用将在 `http://localhost:5173` 上运行，并自动代理 API 请求到后端。
+应用将在 `http://localhost:15173` 上运行，并自动代理 API 请求到后端。
 
 ### 生产构建
 ```bash

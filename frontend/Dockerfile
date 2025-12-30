@@ -1,36 +1,20 @@
-# Multi-stage build for React frontend
-FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:18-alpine as builder
+# Multi-purpose Dockerfile for React frontend (dev and prod)
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files for better caching
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build application
-RUN npm run build
-
-# Production stage with Nginx
-FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nginx:1.25-alpine
-
-# Copy built application from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 # Expose port
-EXPOSE 80
+EXPOSE 5173
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Default command - can be overridden in docker-compose.yml
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
