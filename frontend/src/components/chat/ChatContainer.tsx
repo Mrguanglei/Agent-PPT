@@ -227,26 +227,32 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     <motion.div
       className="flex-1 flex flex-col min-h-0"
       animate={{
-        marginRight: isToolPanelOpen ? 400 : 0,
+        marginRight: isToolPanelOpen ? 384 : 0, // 96 * 4 = 384px (w-96)
       }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      transition={{
+        type: 'spring',
+        stiffness: 300,
+        damping: 30
+      }}
     >
       {/* Message Area */}
-      <ScrollArea className="flex-1">
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          <MessageList
-            messages={messages}
-            streamingContent={streamingContent}
-            isStreaming={isStreaming}
-            currentToolCalls={currentToolCalls}
-          />
-          <div ref={scrollRef} />
+      <ScrollArea className="flex-1 scrollbar-modern">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="space-y-6">
+            <MessageList
+              messages={messages}
+              streamingContent={streamingContent}
+              isStreaming={isStreaming}
+              currentToolCalls={currentToolCalls}
+            />
+            <div ref={scrollRef} />
+          </div>
         </div>
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t border-border p-4">
-        <div className="max-w-3xl mx-auto">
+      <div className="border-t border-border/50 bg-card/50 backdrop-blur-sm p-6">
+        <div className="max-w-4xl mx-auto">
           <ChatInput onSend={handleSend} disabled={isStreaming} />
         </div>
       </div>
