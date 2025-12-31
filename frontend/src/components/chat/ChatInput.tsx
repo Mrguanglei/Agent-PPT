@@ -35,6 +35,9 @@ export function ChatInput({ onSend, disabled, placeholder = '输入您的问题�
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // 检查是否正在使用中文输入法（IME）
+    if (e.nativeEvent.isComposing) return;
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();

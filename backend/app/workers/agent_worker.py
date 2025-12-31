@@ -127,8 +127,9 @@ class RedisListener:
             try:
                 pubsub = await redis_client.subscribe("agent_runs")
 
-                async for message in pubsub.listen():
-                    if message['type'] == 'message':
+                while self.running:
+                    message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                    if message and message['type'] == 'message':
                         data = json.loads(message['data'])
 
                         # Extract parameters

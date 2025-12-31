@@ -160,14 +160,20 @@ export function Sidebar({ chats = [], onNewChat, onDeleteChat, user, onSettingsC
           )}>
             <Avatar className="h-9 w-9 border border-border/50">
               <AvatarImage src={user?.avatar} />
-              <AvatarFallback className="bg-muted text-xs font-bold">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold truncate">{user?.name || '未登录用户'}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{user?.email || '点击登录账号'}</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {user?.email || (
+                    <Link href="/login" className="hover:text-primary transition-colors">
+                      点击登录账号
+                    </Link>
+                  )}
+                </p>
               </div>
             )}
             {!collapsed && <Settings className="h-4 w-4 text-muted-foreground" />}
