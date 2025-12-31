@@ -214,44 +214,52 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     );
   }
 
-  // New chat - show welcome screen
-  if (!chatId && messages.length === 0) {
-    return (
-      <div className="flex-1 flex flex-col">
-        <WelcomeScreen onSend={handleSend} />
-      </div>
-    );
-  }
+  // Note: always render main layout so input stays fixed at bottom.
+  // When there is no chat and no messages, show WelcomeScreen in message area.
 
   return (
     <motion.div
-      className="flex-1 flex flex-col min-h-0"
+      className="flex-1 flex flex-col min-h-0 content-fade-in"
       animate={{
-        marginRight: isToolPanelOpen ? 384 : 0, // 96 * 4 = 384px (w-96)
+        marginRight: (() => {
+          if (!isToolPanelOpen) return 0;
+          // match panel width logic: 56rem = 896px, else full width on small screens
+          if (typeof window !== 'undefined' && window.innerWidth > 56 * 16) {
+            return 56 * 16;
+          }
+          return 0;
+        })(),
       }}
       transition={{
         type: 'spring',
-        stiffness: 300,
-        damping: 30
+        stiffness: 280,
+        damping: 35,
+        mass: 0.8
       }}
     >
       {/* Message Area */}
       <ScrollArea className="flex-1 scrollbar-modern">
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="space-y-6">
-            <MessageList
-              messages={messages}
-              streamingContent={streamingContent}
-              isStreaming={isStreaming}
-              currentToolCalls={currentToolCalls}
-            />
-            <div ref={scrollRef} />
+            {!chatId && messages.length === 0 ? (
+              <WelcomeScreen onSend={handleSend} />
+            ) : (
+              <>
+                <MessageList
+                  messages={messages}
+                  streamingContent={streamingContent}
+                  isStreaming={isStreaming}
+                  currentToolCalls={currentToolCalls}
+                />
+                <div ref={scrollRef} />
+              </>
+            )}
           </div>
         </div>
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t border-border/50 bg-card/50 backdrop-blur-sm p-6">
+      <div className="sticky bottom-0 z-20 border-t border-border/50 bg-card/50 backdrop-blur-sm p-6">
         <div className="max-w-4xl mx-auto">
           <ChatInput onSend={handleSend} disabled={isStreaming} />
         </div>

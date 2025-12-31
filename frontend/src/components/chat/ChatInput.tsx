@@ -42,12 +42,12 @@ export function ChatInput({ onSend, disabled, placeholder = 'Type a message...' 
   };
 
   return (
-    <div className="card-modern p-4">
+    <div className="max-w-4xl mx-auto px-6">
       <div
         className={cn(
-          'relative flex items-end gap-3 p-4 rounded-xl',
-          'bg-muted/30 border border-border/50',
-          'focus-within:border-primary/50 focus-within:bg-background',
+          'relative flex items-end gap-3 p-4 rounded-2xl',
+          'bg-card border border-border shadow-sm',
+          'focus-within:border-primary/40 focus-within:shadow-md',
           'transition-all duration-200'
         )}
       >
@@ -75,7 +75,7 @@ export function ChatInput({ onSend, disabled, placeholder = 'Type a message...' 
             'flex-1 resize-none bg-transparent',
             'text-foreground placeholder:text-muted-foreground',
             'focus:outline-none',
-            'max-h-[200px] py-1',
+            'max-h-[200px] py-3',
             'scrollbar-modern'
           )}
         />

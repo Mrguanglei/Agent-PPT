@@ -75,16 +75,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-modern">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className="bg-card border border-border rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               PPT Agent
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {isLogin ? 'Sign in to your account' : 'Create a new account'}
+            <p className="text-muted-foreground">
+              {isLogin ? '登录您的账户' : '创建新账户'}
             </p>
           </div>
 
@@ -92,8 +92,8 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Username
+                <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
+                  用户名
                 </label>
                 <input
                   id="username"
@@ -101,15 +101,15 @@ export default function LoginPage() {
                   required
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="Your name"
+                  className="w-full px-4 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground placeholder:text-muted-foreground"
+                  placeholder="您的用户名"
                 />
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                邮箱地址
               </label>
               <input
                 id="email"
@@ -117,14 +117,14 @@ export default function LoginPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="you@example.com"
+                className="w-full px-4 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground placeholder:text-muted-foreground"
+                placeholder="your@email.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
+              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+                密码
               </label>
               <input
                 id="password"
@@ -133,7 +133,7 @@ export default function LoginPage() {
                 minLength={8}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground placeholder:text-muted-foreground"
                 placeholder="••••••••"
               />
             </div>
@@ -141,8 +141,8 @@ export default function LoginPage() {
             {error && (
               <div className={`p-3 rounded-lg text-sm ${
                 error.includes('successful')
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  ? 'bg-success/10 text-success border border-success/20'
+                  : 'bg-destructive/10 text-destructive border border-destructive/20'
               }`}>
                 {error}
               </div>
@@ -151,7 +151,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -172,11 +172,11 @@ export default function LoginPage() {
                 setIsLogin(!isLogin);
                 setError('');
               }}
-              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+              className="text-primary hover:text-primary/80 text-sm font-medium transition-colors"
             >
               {isLogin
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
+                ? "还没有账户？注册"
+                : '已有账户？登录'}
             </button>
           </div>
         </div>

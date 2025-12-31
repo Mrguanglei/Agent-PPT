@@ -5,12 +5,14 @@ export const SSE_TIMEOUT = 300000; // 5 minutes
 export const MAX_MESSAGE_LENGTH = 10000;
 
 export const TOOL_LABELS: Record<string, string> = {
-  search_images: 'Image Search',
-  web_search: 'Web Search',
-  visit_page: 'Visit Page',
-  insert_page: 'Insert Page',
-  update_page: 'Update Page',
-  initialize_design: 'Initialize Design',
+  think: '思考规划',
+  web_search: '网页搜索',
+  search_images: '图片搜索',
+  visit_page: '访问网页',
+  initialize_slide: '初始化幻灯片',
+  insert_slides: '插入幻灯片',
+  html: '生成HTML内容',
+  update_slide: '更新幻灯片',
 };
 
 export const LAYOUT_OPTIONS = [
