@@ -5,11 +5,16 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDate } from '@/lib/utils';
 import { ToolCallButton } from '@/components/tool-panel/ToolCallButton';
 import { InteractionCard } from './InteractionCard';
+import { PPTProgressCard } from './PPTProgressCard';
+import { PPTPreviewModal } from './PPTPreviewModal';
 import { useToolPanelStore } from '@/stores/toolPanelStore';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface MessageProps {
   message: MessageType;
+  pptData?: any; // PPT 数据对象
+  executionSteps?: any[]; // 执行步骤数据
 }
 
 export function MessageItem({ message }: MessageProps) {
