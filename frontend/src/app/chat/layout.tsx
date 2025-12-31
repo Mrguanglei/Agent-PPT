@@ -5,6 +5,7 @@ import { ToolSidePanel } from '@/components/tool-panel/ToolSidePanel';
 import { useToolPanelStore } from '@/stores/toolPanelStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useChats } from '@/hooks/useChats';
+import { Chat } from '@/types/chat';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 

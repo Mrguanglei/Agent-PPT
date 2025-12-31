@@ -18,11 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
-interface Chat {
-  id: string;
-  title: string;
-  updated_at: string;
-}
+import { Chat } from '@/types/chat';
 
 interface User {
   id: string;
@@ -147,7 +143,7 @@ export function Sidebar({ chats = [], onNewChat, onDeleteChat, user, onSettingsC
                   <MessageSquarePlus className={cn("h-5 w-5 flex-shrink-0", pathname === `/chat/${chat.id}` ? "text-primary" : "text-muted-foreground/60")} />
                   {!collapsed && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{chat.title || '未命名对话'}</p>
+                      <p className="text-sm font-medium truncate">{chat.title ?? '未命名对话'}</p>
                     </div>
                   )}
                 </Link>
