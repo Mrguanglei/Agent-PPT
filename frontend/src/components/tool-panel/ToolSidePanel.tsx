@@ -52,35 +52,36 @@ export function ToolSidePanel() {
           }
           className="fixed top-0 h-full z-50 tool-panel tool-panel-enter flex flex-col overflow-hidden"
         >
-          {/* Header */}
-          <div className="tool-panel-header sticky top-0 z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
-                    <Zap className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-base truncate">
-                      {getToolLabel(selectedTool?.name)}
-                    </h3>
-                    <div className="flex items-center gap-3 mt-2">
-                      <StatusBadge status={selectedTool?.status} />
-                      {selectedTool?.executionTime !== undefined && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span className="font-medium">{selectedTool.executionTime.toFixed(2)}s</span>
-                        </div>
-                      )}
-                    </div>
+          {/* Header - 优化设计 */}
+          <div className="tool-panel-header sticky top-0 z-10 border-b border-tool-panel-border/50 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-xl">
+            <div className="px-6 py-5 flex items-center justify-between gap-4">
+              {/* 左侧：工具信息 */}
+              <div className="flex items-center gap-4 min-w-0 flex-1">
+                <div className="flex-shrink-0 p-2.5 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
+                  <Zap className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground text-base truncate leading-tight">
+                    {getToolLabel(selectedTool?.name)}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <StatusBadge status={selectedTool?.status} />
+                    {selectedTool?.executionTime !== undefined && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-md border border-border/50">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span className="font-medium">{selectedTool.executionTime.toFixed(2)}s</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* 右侧：操作按钮 */}
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-lg hover:bg-muted/10"
+                  className="h-9 w-9 rounded-lg hover:bg-muted/20 transition-colors duration-200"
                   onClick={() => {
                     const key = selectedTool?.id || `${selectedTool?.name}-${selectedTool?.index}`;
                     const favs = JSON.parse(localStorage.getItem('tool_favorites') || '{}');
@@ -91,18 +92,16 @@ export function ToolSidePanel() {
                       favs[key] = { name: selectedTool?.name, time: Date.now() };
                       localStorage.setItem('tool_favorites', JSON.stringify(favs));
                     }
-                    // visual toggle via small pulse
-                    // no state here to persist in store
                   }}
                   title="收藏"
                 >
-                  <Star className="w-4 h-4 text-muted-foreground" />
+                  <Star className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                 </Button>
 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-lg hover:bg-muted/10"
+                  className="h-9 w-9 rounded-lg hover:bg-muted/20 transition-colors duration-200"
                   onClick={() => {
                     try {
                       const dataStr = typeof selectedTool?.result === 'string' ? selectedTool.result : JSON.stringify(selectedTool?.result || {}, null, 2);
@@ -119,35 +118,41 @@ export function ToolSidePanel() {
                   }}
                   title="下载"
                 >
-                  <Download className="w-4 h-4 text-muted-foreground" />
+                  <Download className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                 </Button>
 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-lg hover:bg-muted/10"
+                  className="h-9 w-9 rounded-lg hover:bg-muted/20 transition-colors duration-200"
                   onClick={() => {
-                    // open edit modal
                     const val = typeof selectedTool?.result === 'string' ? selectedTool.result : JSON.stringify(selectedTool?.result || {}, null, 2);
                     setShowEditModal(true);
                     setEditValue(val);
                   }}
                   title="编辑"
                 >
-                  <Edit3 className="w-4 h-4 text-muted-foreground" />
+                  <Edit3 className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                 </Button>
 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-lg hover:bg-muted/10"
+                  className="h-9 w-9 rounded-lg hover:bg-muted/20 transition-colors duration-200"
                   onClick={() => setShowShareModal(true)}
                   title="分享"
                 >
-                  <Share2 className="w-4 h-4 text-muted-foreground" />
+                  <Share2 className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                 </Button>
 
-                <Button variant="ghost" size="icon" onClick={closePanel} className="h-9 w-9 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-all duration-200">
+                <div className="w-px h-6 bg-border/30 mx-1" />
+
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={closePanel} 
+                  className="h-9 w-9 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -156,70 +161,117 @@ export function ToolSidePanel() {
 
           {/* Content */}
           <ScrollArea className="flex-1 scrollbar-modern">
-          <div className="tool-panel-content flex flex-col min-h-full">
+            <div className="tool-panel-content flex flex-col min-h-full">
               {/* Share modal */}
               {showShareModal && (
-                <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/50">
-                  <div className="bg-card p-6 rounded-lg w-[640px] max-w-full">
+                <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                  <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    className="bg-card p-6 rounded-xl w-[640px] max-w-[90vw] border border-border/50 shadow-lg"
+                  >
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-sm font-semibold">分享工具结果</h4>
-                      <button className="p-2" onClick={() => setShowShareModal(false)}>关闭</button>
-                    </div>
-                    <div className="text-sm mb-2">复制下面的分享内容或直接复制链接：</div>
-                    <textarea readOnly className="w-full h-40 p-3 border border-border rounded mb-4" value={selectedTool ? JSON.stringify({ name: selectedTool.name, result: selectedTool.result }, null, 2) : ''} />
-                    <div className="flex justify-end gap-2">
-                      <button className="btn-modern btn-modern-primary" onClick={() => { navigator.clipboard.writeText(JSON.stringify({ name: selectedTool?.name, result: selectedTool?.result })); }}>
-                        复制
+                      <h4 className="text-sm font-semibold text-foreground">分享工具结果</h4>
+                      <button 
+                        className="p-1.5 hover:bg-muted/20 rounded-lg transition-colors"
+                        onClick={() => setShowShareModal(false)}
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
                       </button>
-                      <button className="btn-modern" onClick={() => setShowShareModal(false)}>完成</button>
                     </div>
-                  </div>
+                    <div className="text-sm text-muted-foreground mb-3">复制下面的分享内容或直接复制链接：</div>
+                    <textarea 
+                      readOnly 
+                      className="w-full h-40 p-3 border border-border/50 rounded-lg bg-muted/30 text-sm font-mono text-foreground mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50" 
+                      value={selectedTool ? JSON.stringify({ name: selectedTool.name, result: selectedTool.result }, null, 2) : ''} 
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowShareModal(false)}
+                      >
+                        取消
+                      </Button>
+                      <Button 
+                        onClick={() => { 
+                          navigator.clipboard.writeText(JSON.stringify({ name: selectedTool?.name, result: selectedTool?.result }));
+                          setShowShareModal(false);
+                        }}
+                      >
+                        复制并关闭
+                      </Button>
+                    </div>
+                  </motion.div>
                 </div>
               )}
 
               {/* Edit modal */}
               {showEditModal && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-                  <div className="bg-card p-6 rounded-lg w-[720px] max-w-full">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                  <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    className="bg-card p-6 rounded-xl w-[720px] max-w-[90vw] border border-border/50 shadow-lg"
+                  >
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-sm font-semibold">编辑工具结果</h4>
-                      <button className="p-2" onClick={() => setShowEditModal(false)}>关闭</button>
+                      <h4 className="text-sm font-semibold text-foreground">编辑工具结果</h4>
+                      <button 
+                        className="p-1.5 hover:bg-muted/20 rounded-lg transition-colors"
+                        onClick={() => setShowEditModal(false)}
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
                     </div>
-                    <textarea value={editValue} onChange={(e) => setEditValue(e.target.value)} className="w-full h-64 p-3 border border-border rounded mb-4" />
+                    <textarea 
+                      value={editValue} 
+                      onChange={(e) => setEditValue(e.target.value)} 
+                      className="w-full h-64 p-3 border border-border/50 rounded-lg bg-muted/30 text-sm font-mono text-foreground mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50" 
+                    />
                     <div className="flex justify-end gap-2">
-                      <button className="btn-modern btn-modern-primary" onClick={() => {
-                        // save edited result back to store
-                        try {
-                          const parsed = (() => {
-                            try { return JSON.parse(editValue); } catch { return editValue; }
-                          })();
-                          if (selectedTool) {
-                            updateToolCall(selectedTool.index, { result: parsed });
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowEditModal(false)}
+                      >
+                        取消
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          try {
+                            const parsed = (() => {
+                              try { return JSON.parse(editValue); } catch { return editValue; }
+                            })();
+                            if (selectedTool) {
+                              updateToolCall(selectedTool.index, { result: parsed });
+                            }
+                          } catch (e) {
+                            console.error('Save failed', e);
                           }
-                        } catch (e) {
-                          console.error('Save failed', e);
-                        }
-                        setShowEditModal(false);
-                      }}>保存</button>
-                      <button className="btn-modern" onClick={() => setShowEditModal(false)}>取消</button>
+                          setShowEditModal(false);
+                        }}
+                      >
+                        保存
+                      </Button>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               )}
+
               {/* Status Overview */}
-              <div className="tool-panel-section">
+              <div className="tool-panel-section px-6 pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="tool-panel-section-header">执行状态</h4>
-                  <Badge variant="outline" className="text-xs px-2.5 py-1 bg-card/50 border-border/50">
+                  <Badge variant="outline" className="text-xs px-2.5 py-1 bg-muted/40 border-border/50 text-muted-foreground">
                     工具 #{selectedTool.index + 1}
                   </Badge>
                 </div>
-                <div className="card-modern p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <div className="card-modern p-5 bg-gradient-to-br from-card/60 to-card/40 border border-border/50">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1">
                       <StatusIcon status={selectedTool.status} />
                       <div className="flex-1">
-                        <p className="text-base font-semibold capitalize mb-1">
+                        <p className="text-base font-semibold text-foreground mb-1">
                           {selectedTool.status === 'running' ? '执行中' :
                            selectedTool.status === 'success' ? '完成' :
                            selectedTool.status === 'failed' ? '失败' : '等待中'}
@@ -232,7 +284,7 @@ export function ToolSidePanel() {
                       </div>
                     </div>
                     {selectedTool.executionTime && (
-                      <div className="text-right bg-muted/30 px-3 py-2 rounded-lg">
+                      <div className="text-right bg-muted/40 px-4 py-2 rounded-lg border border-border/50">
                         <p className="text-lg font-bold text-foreground">{selectedTool.executionTime.toFixed(2)}s</p>
                         <p className="text-xs text-muted-foreground font-medium">执行时间</p>
                       </div>
@@ -241,25 +293,23 @@ export function ToolSidePanel() {
                 </div>
               </div>
 
-              {/* Parameters moved below as collapsible raw view */}
-
               {/* Result - PPT 生成工具特殊处理 */}
               {selectedTool.name === 'html' && selectedTool.result ? (
-                <div className="tool-panel-section">
-                  <h4 className="tool-panel-section-header">生成结果</h4>
+                <div className="tool-panel-section px-6 pt-6">
+                  <h4 className="tool-panel-section-header mb-4">生成结果</h4>
                   <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'code' | 'ppt')} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-5 h-10">
-                      <TabsTrigger value="ppt" className="gap-2 text-sm font-medium">
+                    <TabsList className="grid w-full grid-cols-2 mb-5 h-10 bg-muted/40 border border-border/50 p-1 rounded-lg">
+                      <TabsTrigger value="ppt" className="gap-2 text-sm font-medium rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
                         <FileText className="w-4 h-4" />
                         预览
                       </TabsTrigger>
-                      <TabsTrigger value="code" className="gap-2 text-sm font-medium">
+                      <TabsTrigger value="code" className="gap-2 text-sm font-medium rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm">
                         <Code className="w-4 h-4" />
                         源码
                       </TabsTrigger>
                     </TabsList>
                     <TabsContent value="ppt" className="mt-0 flex-1 min-h-0">
-                      <div className="card-modern p-4 flex flex-col h-full min-h-0">
+                      <div className="card-modern p-4 flex flex-col h-full min-h-0 bg-card/60 border border-border/50">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="p-2 rounded-lg bg-success/10 border border-success/20">
                             <FileText className="w-4 h-4 text-success" />
@@ -272,7 +322,7 @@ export function ToolSidePanel() {
                       </div>
                     </TabsContent>
                     <TabsContent value="code" className="mt-0 flex-1 min-h-0">
-                      <div className="card-modern p-4 flex flex-col h-full min-h-0">
+                      <div className="card-modern p-4 flex flex-col h-full min-h-0 bg-card/60 border border-border/50">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                             <Code className="w-4 h-4 text-primary" />
@@ -280,7 +330,7 @@ export function ToolSidePanel() {
                           <span className="text-sm font-semibold text-foreground">HTML 源码</span>
                         </div>
                         <div className="flex-1 overflow-auto min-h-0">
-                          <pre className="text-sm text-foreground overflow-auto max-h-full bg-muted/30 border border-border/50 p-4 rounded-xl font-mono leading-relaxed">
+                          <pre className="text-sm text-foreground overflow-auto max-h-full bg-muted/30 border border-border/50 p-4 rounded-lg font-mono leading-relaxed">
                             {typeof selectedTool.result === 'string'
                               ? selectedTool.result
                               : JSON.stringify(selectedTool.result, null, 2)}
@@ -291,19 +341,19 @@ export function ToolSidePanel() {
                   </Tabs>
                 </div>
               ) : selectedTool.result ? (
-                <div className="tool-panel-section">
-                  <h4 className="tool-panel-section-header">执行结果</h4>
+                <div className="tool-panel-section px-6 pt-6">
+                  <h4 className="tool-panel-section-header mb-4">执行结果</h4>
                   <ToolResultView toolName={selectedTool.name} result={selectedTool.result} />
                 </div>
               ) : null}
 
               {/* Error */}
               {selectedTool.error && (
-                <div className="tool-panel-section">
-                  <h4 className="tool-panel-section-header">错误信息</h4>
-                  <div className="card-modern p-5 border-destructive/30 bg-gradient-to-r from-destructive/5 to-destructive/10">
+                <div className="tool-panel-section px-6 pt-6">
+                  <h4 className="tool-panel-section-header mb-4">错误信息</h4>
+                  <div className="card-modern p-5 border border-destructive/30 bg-gradient-to-r from-destructive/5 to-destructive/10 rounded-lg">
                     <div className="flex items-start gap-4">
-                      <div className="p-2 rounded-lg bg-destructive/20 border border-destructive/30">
+                      <div className="p-2 rounded-lg bg-destructive/20 border border-destructive/30 flex-shrink-0">
                         <AlertCircle className="w-5 h-5 text-destructive" />
                       </div>
                       <div className="flex-1">
@@ -314,36 +364,45 @@ export function ToolSidePanel() {
                   </div>
                 </div>
               )}
+
               {/* Collapsible raw / params view */}
-              <div className="tool-panel-section">
-                <div className="flex items-center justify-between">
+              <div className="tool-panel-section px-6 pt-6">
+                <div className="flex items-center justify-between mb-4">
                   <h4 className="tool-panel-section-header">原始数据</h4>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowRaw((s) => !s)}
-                    className="text-xs"
+                    className="text-xs h-8 px-2 hover:bg-muted/20"
                   >
                     {showRaw ? '隐藏' : '显示'}
                   </Button>
                 </div>
                 {showRaw && (
-                  <div className="card-modern p-4 mt-2">
-                    <div className="text-xs text-muted-foreground mb-2">输入参数</div>
-                    <pre className="text-xs text-foreground overflow-auto bg-muted/30 p-3 rounded-lg max-h-[220px]">
-                      {selectedTool.params ? (typeof selectedTool.params === 'string' ? selectedTool.params : JSON.stringify(selectedTool.params, null, 2)) : '无'}
-                    </pre>
+                  <div className="card-modern p-4 bg-card/60 border border-border/50 rounded-lg space-y-4">
+                    <div>
+                      <div className="text-xs text-muted-foreground font-medium mb-2">输入参数</div>
+                      <pre className="text-xs text-foreground overflow-auto bg-muted/30 p-3 rounded-lg max-h-[220px] border border-border/50 font-mono leading-relaxed">
+                        {selectedTool.params ? (typeof selectedTool.params === 'string' ? selectedTool.params : JSON.stringify(selectedTool.params, null, 2)) : '无'}
+                      </pre>
+                    </div>
 
-                    <div className="text-xs text-muted-foreground mt-3 mb-2">原始结果</div>
-                    <pre className="text-xs text-foreground overflow-auto bg-muted/30 p-3 rounded-lg max-h-[320px]">
-                      {selectedTool.result ? (typeof selectedTool.result === 'string' ? selectedTool.result : JSON.stringify(selectedTool.result, null, 2)) : '无'}
-                    </pre>
+                    <div>
+                      <div className="text-xs text-muted-foreground font-medium mb-2">原始结果</div>
+                      <pre className="text-xs text-foreground overflow-auto bg-muted/30 p-3 rounded-lg max-h-[320px] border border-border/50 font-mono leading-relaxed">
+                        {selectedTool.result ? (typeof selectedTool.result === 'string' ? selectedTool.result : JSON.stringify(selectedTool.result, null, 2)) : '无'}
+                      </pre>
+                    </div>
                   </div>
                 )}
               </div>
+
+              {/* Bottom padding */}
+              <div className="h-6" />
             </div>
           </ScrollArea>
-            <LightboxListener />
+
+          <LightboxListener />
         </motion.div>
       )}
     </AnimatePresence>
@@ -354,15 +413,15 @@ function renderPPTPreview(result: any) {
   // 如果结果是 HTML，渲染为 iframe
   if (typeof result === 'string' && result.includes('<!DOCTYPE html>')) {
     return (
-      <div className="w-full">
-        <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-sm h-full min-h-0">
+      <div className="w-full h-full">
+        <div className="relative overflow-hidden rounded-lg border border-border/50 bg-card/50 shadow-sm h-full min-h-0">
           <iframe
             srcDoc={result}
             className="w-full h-full border-0 min-h-0"
             sandbox="allow-same-origin allow-scripts"
             title="PPT Preview"
           />
-          <div className="absolute inset-0 pointer-events-none rounded-xl ring-1 ring-white/10"></div>
+          <div className="absolute inset-0 pointer-events-none rounded-lg ring-1 ring-white/10"></div>
         </div>
       </div>
     );
@@ -371,15 +430,15 @@ function renderPPTPreview(result: any) {
   // 如果结果是对象，包含 HTML
   if (result?.html) {
     return (
-      <div className="w-full">
-        <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-sm h-full min-h-0">
+      <div className="w-full h-full">
+        <div className="relative overflow-hidden rounded-lg border border-border/50 bg-card/50 shadow-sm h-full min-h-0">
           <iframe
             srcDoc={result.html}
             className="w-full h-full border-0 min-h-0"
             sandbox="allow-same-origin allow-scripts"
             title="PPT Preview"
           />
-          <div className="absolute inset-0 pointer-events-none rounded-xl ring-1 ring-white/10"></div>
+          <div className="absolute inset-0 pointer-events-none rounded-lg ring-1 ring-white/10"></div>
         </div>
       </div>
     );
@@ -387,7 +446,7 @@ function renderPPTPreview(result: any) {
 
   // 其他情况显示 JSON
   return (
-    <div className="bg-muted/30 border border-border/50 p-4 rounded-xl">
+    <div className="bg-muted/30 border border-border/50 p-4 rounded-lg">
       <pre className="text-sm text-muted-foreground font-mono leading-relaxed">
         {JSON.stringify(result, null, 2)}
       </pre>
@@ -436,8 +495,8 @@ function StatusBadge({ status }: { status?: string }) {
   const Icon = config.icon;
 
   return (
-    <div className={cn(config.className, config.bgColor, config.textColor, 'border', config.borderColor)}>
-      <Icon className={cn('w-3.5 h-3.5', config.glow && 'animate-pulse')} />
+    <div className={cn(config.className, config.bgColor, config.textColor, 'border', config.borderColor, 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium')}>
+      <Icon className="w-3.5 h-3.5" />
       <span className="font-medium">{config.label}</span>
     </div>
   );
@@ -501,14 +560,14 @@ function ToolResultView({ toolName, result }: { toolName: string; result: any })
   }
 
   return (
-    <div className="card-modern p-5">
+    <div className="card-modern p-5 bg-card/60 border border-border/50 rounded-lg">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-lg bg-muted/50 border border-border/50">
           <Info className="w-4 h-4 text-muted-foreground" />
         </div>
         <span className="text-sm font-semibold text-muted-foreground">执行结果</span>
       </div>
-      <pre className="text-sm text-foreground overflow-auto bg-muted/30 border border-border/50 p-4 rounded-xl font-mono leading-relaxed max-h-[400px]">
+      <pre className="text-sm text-foreground overflow-auto bg-muted/30 border border-border/50 p-4 rounded-lg font-mono leading-relaxed max-h-[400px]">
         {JSON.stringify(result, null, 2)}
       </pre>
     </div>
@@ -519,7 +578,7 @@ function ImageSearchResult({ result }: { result: any[] }) {
   if (!Array.isArray(result)) return null;
 
   return (
-    <div className="card-modern p-5">
+    <div className="card-modern p-5 bg-card/60 border border-border/50 rounded-lg">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
           <FileText className="w-4 h-4 text-primary" />
@@ -532,27 +591,26 @@ function ImageSearchResult({ result }: { result: any[] }) {
         {result.slice(0, 12).map((img, idx) => (
           <div
             key={idx}
-            className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-sm hover:shadow-md transition-all duration-200"
+            className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200"
           >
-            <div className="aspect-video overflow-hidden">
+            <div className="aspect-video overflow-hidden bg-muted/30">
               <img
                 src={img.thumbnail || img.url}
                 alt={img.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onClick={() => {
-                  // open lightbox handled below via dataset
                   const ev = new CustomEvent('openLightbox', { detail: { src: img.url || img.thumbnail } });
                   window.dispatchEvent(ev);
                 }}
               />
             </div>
-            <div className="p-3 flex items-center justify-between gap-3">
+            <div className="p-3 flex items-center justify-between gap-3 bg-card/40 border-t border-border/50">
               <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mr-2">
                 {img.title || `图片 ${idx + 1}`}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <button
-                  className="p-1 rounded-md hover:bg-muted/20"
+                  className="p-1.5 rounded-md hover:bg-muted/20 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     const a = document.createElement('a');
@@ -565,10 +623,10 @@ function ImageSearchResult({ result }: { result: any[] }) {
                   }}
                   title="下载图片"
                 >
-                  <Download className="w-4 h-4 text-muted-foreground" />
+                  <Download className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
                 </button>
                 <button
-                  className="p-1 rounded-md hover:bg-muted/20"
+                  className="p-1.5 rounded-md hover:bg-muted/20 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     const ev = new CustomEvent('openLightbox', { detail: { src: img.url || img.thumbnail } });
@@ -576,7 +634,7 @@ function ImageSearchResult({ result }: { result: any[] }) {
                   }}
                   title="查看大图"
                 >
-                  <ZoomIn className="w-4 h-4 text-muted-foreground" />
+                  <ZoomIn className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
                 </button>
               </div>
             </div>
@@ -590,7 +648,6 @@ function ImageSearchResult({ result }: { result: any[] }) {
           </p>
         </div>
       )}
-      {/* Lightbox listener */}
       <LightboxListener />
     </div>
   );
@@ -600,7 +657,7 @@ function WebSearchResult({ result }: { result: any[] }) {
   if (!Array.isArray(result)) return null;
 
   return (
-    <div className="card-modern p-5">
+    <div className="card-modern p-5 bg-card/60 border border-border/50 rounded-lg">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-lg bg-info/10 border border-info/20">
           <FileText className="w-4 h-4 text-info" />
@@ -620,7 +677,7 @@ function WebSearchResult({ result }: { result: any[] }) {
           return (
             <div
               key={idx}
-              className="p-4 rounded-xl border border-border/50 bg-card/30 hover:bg-card/50 hover:border-primary/30 transition-all duration-200 group cursor-pointer shadow-sm hover:shadow-md"
+              className="p-4 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 hover:border-primary/30 transition-all duration-200 group cursor-pointer shadow-sm hover:shadow-md"
             >
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center">
@@ -638,20 +695,20 @@ function WebSearchResult({ result }: { result: any[] }) {
                         {item.snippet}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
                       {item.url && (
                         <>
                           <div className="text-xs text-muted-foreground font-mono truncate">{host}</div>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1 mt-1">
                             <button
-                              className="p-1 rounded-md hover:bg-muted/10"
+                              className="p-1.5 rounded-md hover:bg-muted/10 transition-colors"
                               onClick={() => window.open(item.url, '_blank')}
                               title="打开链接"
                             >
-                              <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
                             </button>
                             <button
-                              className="p-1 rounded-md hover:bg-muted/10"
+                              className="p-1.5 rounded-md hover:bg-muted/10 transition-colors"
                               onClick={() => {
                                 try {
                                   navigator.clipboard.writeText(item.url);
@@ -661,7 +718,7 @@ function WebSearchResult({ result }: { result: any[] }) {
                               }}
                               title="复制链接"
                             >
-                              <Copy className="w-4 h-4 text-muted-foreground" />
+                              <Copy className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors" />
                             </button>
                           </div>
                         </>

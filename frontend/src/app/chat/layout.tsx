@@ -13,7 +13,7 @@ export default function ChatLayout({
   const { isOpen: isToolPanelOpen } = useToolPanelStore();
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
@@ -21,12 +21,13 @@ export default function ChatLayout({
       <motion.main
         className="flex-1 flex flex-col min-w-0"
         animate={{
-          marginRight: isToolPanelOpen ? 384 : 0, // 96 * 4 = 384px (w-96)
+          marginRight: isToolPanelOpen ? 896 : 0, // 56rem = 896px (matches ToolSidePanel width)
         }}
         transition={{
           type: 'spring',
-          stiffness: 300,
-          damping: 30
+          stiffness: 280,
+          damping: 35,
+          mass: 0.8
         }}
       >
         <div className="flex-1 flex flex-col">
