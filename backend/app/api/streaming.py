@@ -58,7 +58,7 @@ async def stream_agent_response(
                     # Get message with timeout
                     message = await pubsub.get_message(
                         ignore_subscribe_messages=True,
-                        timeout=None
+                        timeout=1  # Use a small timeout to allow cleanup
                     )
 
                     if message and message['type'] == 'message':
@@ -147,7 +147,7 @@ async def stream_chat_updates(
                 try:
                     message = await pubsub.get_message(
                         ignore_subscribe_messages=True,
-                        timeout=None
+                        timeout=1  # Use a small timeout to allow cleanup
                     )
 
                     if message and message['type'] == 'message':
