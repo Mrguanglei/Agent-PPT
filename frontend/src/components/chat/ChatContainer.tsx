@@ -8,6 +8,8 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { WelcomeScreen } from './WelcomeScreen';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Info } from 'lucide-react';
 import { API_URL } from '@/lib/constants';
 import type { Message, ToolCallInMessage } from '@/types/message';
 
@@ -250,7 +252,28 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
       </ScrollArea>
 
       {/* Input Area - Floating style like ChatGLM */}
-      <div className="w-full bg-gradient-to-t from-background via-background to-transparent pt-10">
+      <div className="w-full bg-gradient-to-t from-background via-background to-transparent pt-10 relative">
+        {/* 状态提示条 - ChatGLM 风格 */}
+        <AnimatePresence>
+          {isStreaming && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute -top-2 left-1/2 -translate-x-1/2 z-30"
+            >
+              <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-card border border-border shadow-lg backdrop-blur-md">
+                <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+                <span className="text-[11px] font-bold text-foreground/80 uppercase tracking-wider">
+                  {currentToolCalls.length > 0 ? '正在执行任务规划...' : '正在思考中...'}
+                </span>
+                <div className="w-px h-3 bg-border mx-1" />
+                <span className="text-[10px] text-muted-foreground">您可以随时离开，任务将在后台继续</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <ChatInput onSend={handleSend} disabled={isStreaming} />
       </div>
     </motion.div>

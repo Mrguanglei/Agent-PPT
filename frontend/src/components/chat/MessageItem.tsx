@@ -4,6 +4,7 @@ import { Message as MessageType, ToolCallInMessage } from '@/types/message';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDate } from '@/lib/utils';
 import { ToolCallButton } from '@/components/tool-panel/ToolCallButton';
+import { InteractionCard } from './InteractionCard';
 import { useToolPanelStore } from '@/stores/toolPanelStore';
 import { cn } from '@/lib/utils';
 
@@ -70,6 +71,11 @@ export function MessageItem({ message }: MessageProps) {
               {message.content}
             </p>
           </div>
+        )}
+
+        {/* 交互卡片展示区 - ChatGLM 风格 */}
+        {message.interaction_card && (
+          <InteractionCard card={message.interaction_card} />
         )}
 
         {/* 工具调用展示区 - 模仿 ChatGLM 风格 */}
