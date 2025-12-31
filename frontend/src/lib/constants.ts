@@ -1,4 +1,7 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// API URL configuration
+// Always use relative path in production (nginx will proxy)
+export const API_URL = '';
+
 
 export const SSE_TIMEOUT = 300000; // 5 minutes
 

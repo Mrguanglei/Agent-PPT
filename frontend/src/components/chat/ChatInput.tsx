@@ -8,11 +8,12 @@ import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
   onSend: (content: string) => void;
+  onStop?: () => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
-export function ChatInput({ onSend, disabled, placeholder = '输入您的问题或指令...' }: ChatInputProps) {
+export function ChatInput({ onSend, onStop, disabled, placeholder = '输入您的问题或指令...' }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -114,6 +115,7 @@ export function ChatInput({ onSend, disabled, placeholder = '输入您的问题�
               {disabled ? (
                 <Button
                   size="icon"
+                  onClick={onStop}
                   className="h-9 w-9 rounded-full bg-destructive hover:bg-destructive/90 shadow-md"
                 >
                   <StopCircle className="h-4.5 w-4.5" />

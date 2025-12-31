@@ -1,5 +1,5 @@
 """
-Web Search Tool
+Web Search Tool - Using Bocha API
 """
 import httpx
 from typing import List, Dict, Any, Optional
@@ -11,91 +11,77 @@ async def web_search(
     chat_id: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Search the web for information using Serper API or similar.
+    Search the web for information using Bocha API.
 
     Args:
         queries: List of search query strings
         chat_id: Optional chat ID for logging
 
     Returns:
-        List of search results with title, URL, and snippet
+        List of search results with title, URL, snippet, and metadata
     """
     results = []
-    errors = []
 
-    # Try Serper API first (recommended)
-    if settings.serper_api_key:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                for query in queries:
-                    response = await client.post(
-                        "https://google.serper.dev/search",
-                        headers={
-                            "X-API-Key": settings.serper_api_key,
-                            "Content-Type": "application/json",
-                        },
-                        json={"q": query, "num": 10},
-                    )
+    # Get API key from environment
+    api_key = getattr(settings, 'bocha_api_key', None) or getattr(settings, 'serper_api_key', None)
 
-                    if response.status_code == 200:
-                        data = response.json()
-                        for item in data.get("organic", []):
-                            results.append({
-                                "title": item.get("title", ""),
-                                "url": item.get("link", ""),
-                                "snippet": item.get("snippet", ""),
-                                "query": query,
-                            })
-                    elif response.status_code in [401, 403]:
-                        errors.append(f"Serper API returned {response.status_code} - API key may be invalid or quota exceeded")
-                    else:
-                        errors.append(f"Serper API returned {response.status_code}")
-        except Exception as e:
-            errors.append(f"Serper API error: {str(e)}")
-
-    # Fallback: Bing Search API
-    if not results and settings.bing_search_api_key:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                for query in queries:
-                    response = await client.get(
-                        "https://api.bing.microsoft.com/v7.0/search",
-                        headers={"Ocp-Apim-Subscription-Key": settings.bing_search_api_key},
-                        params={"q": query, "count": 10},
-                    )
-
-                    if response.status_code == 200:
-                        data = response.json()
-                        for item in data.get("webPages", {}).get("value", []):
-                            results.append({
-                                "title": item.get("name", ""),
-                                "url": item.get("url", ""),
-                                "snippet": item.get("snippet", ""),
-                                "query": query,
-                            })
-                    elif response.status_code in [401, 403]:
-                        errors.append(f"Bing API returned {response.status_code} - API key may be invalid")
-        except Exception as e:
-            errors.append(f"Bing API error: {str(e)}")
-
-    # If no results and there were errors, return error info
-    if not results and errors:
+    if not api_key:
         return [{
-            "title": "Search Unavailable",
+            "title": "搜索不可用",
             "url": "",
-            "snippet": f"Unable to perform web search. Please configure search API keys (SERPER_API_KEY or BING_SEARCH_API_KEY). Details: {', '.join(errors[:2])}",
+            "snippet": "未配置博查API密钥 (BOCHA_API_KEY)。请在.env文件中添加API密钥。",
             "query": queries[0] if queries else "",
             "error": True,
         }]
 
-    # Final fallback: Mock results for development
-    if not results and settings.is_development:
-        for query in queries:
-            results.append({
-                "title": f"Search result for: {query}",
-                "url": "https://example.com",
-                "snippet": f"This is a mock search result for '{query}'. In production, actual search results will appear here.",
-                "query": query,
-            })
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for query in queries:
+                response = await client.post(
+                    "https://api.bocha.cn/v1/web-search",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "query": query,
+                        "freshness": "noLimit",
+                        "summary": True,
+                        "count": 10
+                    },
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    web_pages = data.get("data", {}).get("webPages", {}).get("value", [])
+
+                    for item in web_pages:
+                        results.append({
+                            "title": item.get("name", ""),
+                            "url": item.get("url", ""),
+                            "snippet": item.get("snippet", ""),
+                            "displayUrl": item.get("displayUrl", ""),
+                            "siteName": item.get("siteName", ""),
+                            "siteIcon": item.get("siteIcon", ""),
+                            "dateLastCrawled": item.get("dateLastCrawled", ""),
+                            "query": query,
+                        })
+                else:
+                    # API error
+                    results.append({
+                        "title": "搜索失败",
+                        "url": "",
+                        "snippet": f"博查API返回错误: {response.status_code}",
+                        "query": query,
+                        "error": True,
+                    })
+    except Exception as e:
+        return [{
+            "title": "搜索错误",
+            "url": "",
+            "snippet": f"搜索时发生错误: {str(e)}",
+            "query": queries[0] if queries else "",
+            "error": True,
+        }]
 
     return results

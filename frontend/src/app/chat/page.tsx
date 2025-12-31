@@ -11,6 +11,13 @@ export default function ChatPage() {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
+    // 检查用户是否已登录
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
     // 如果还在加载中，等待
     if (isLoading) return;
 
@@ -30,7 +37,7 @@ export default function ChatPage() {
       } catch (error) {
         console.error('Failed to create chat:', error);
         // 即使创建失败，也重定向到一个临时ID，让用户可以开始对话
-        router.replace(`/chat/temp`);
+        router.replace(`/chat`);
       } finally {
         setIsCreating(false);
       }

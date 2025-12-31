@@ -55,7 +55,10 @@ export function useAgentStream({
   useEffect(() => {
     if (!agentRunId) return;
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // Use environment variable if set (for local development), otherwise use relative path (for production/nginx proxy)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL !== ''
+      ? process.env.NEXT_PUBLIC_API_URL
+      : '';
     const token = localStorage.getItem('token');
 
     if (!token) {

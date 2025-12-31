@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { API_URL } from '@/lib/constants';
 import { Loader2 } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +44,9 @@ export default function LoginPage() {
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        router.push('/chat');
+        // Redirect to the page user was trying to access, or /chat by default
+        const redirect = searchParams.get('redirect') || '/chat';
+        router.push(redirect);
       } else {
         // Register
         const response = await fetch(`${API_URL}/api/v1/auth/register`, {
@@ -184,3 +187,16 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
+  );
+}
+

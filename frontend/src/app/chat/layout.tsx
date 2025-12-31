@@ -21,14 +21,11 @@ export default function ChatLayout({
 
   const handleNewChat = async () => {
     try {
+      // 创建新对话并跳转到该对话
       const newChat = await createChat();
       router.push(`/chat/${newChat.id}`);
     } catch (error) {
-      console.error('Failed to create new chat:', error);
-      // 如果未登录，跳转到登录页
-      if (!localStorage.getItem('token')) {
-        router.push('/login');
-      }
+      console.error('Failed to create chat:', error);
     }
   };
 
@@ -47,7 +44,7 @@ export default function ChatLayout({
       <motion.main
         className="flex-1 flex flex-col min-w-0 relative"
         animate={{
-          marginRight: isToolPanelOpen ? 896 : 0,
+          marginRight: isToolPanelOpen ? 500 : 0,
         }}
         transition={{
           type: 'spring',

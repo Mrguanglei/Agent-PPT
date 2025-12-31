@@ -42,7 +42,14 @@ class Settings(BaseSettings):
 
     # CORS
     cors_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"]
+        default=[
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3003",
+            "http://127.0.0.1:3003",
+            "http://localhost",
+            "http://localhost:8000",  # Allow direct backend access for development
+        ]
     )
 
     # MinIO
@@ -55,6 +62,7 @@ class Settings(BaseSettings):
     # Search APIs
     serper_api_key: str = Field(default="", env="SERPER_API_KEY")
     bing_search_api_key: str = Field(default="", env="BING_SEARCH_API_KEY")
+    bocha_api_key: str = Field(default="", env="BOCHA_API_KEY")
 
     @validator("cors_origins", pre=True)
     def parse_cors_origins(cls, v):

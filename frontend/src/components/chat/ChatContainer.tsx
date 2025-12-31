@@ -26,7 +26,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentToolCalls, setCurrentToolCalls] = useState<ToolCallInMessage[]>([]);
 
-  const { isOpen: isToolPanelOpen } = useToolPanelStore();
+  const { isOpen: isToolPanelOpen, clearToolCalls } = useToolPanelStore();
 
   const streamingContentRef = useRef(streamingContent);
   const currentToolCallsRef = useRef(currentToolCalls);
@@ -109,6 +109,25 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     setAgentRunId(null);
   }, []);
 
+  const handleStop = useCallback(async () => {
+    if (!agentRunId) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_URL}/api/v1/agent/${agentRunId}/stop`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to stop agent:', error);
+    }
+
+    setIsStreaming(false);
+    setAgentRunId(null);
+  }, [agentRunId]);
+
   const handleMessage = useCallback((content: string) => {
     setStreamingContent((prev) => prev + content);
   }, []);
@@ -151,6 +170,9 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   });
 
   const handleSend = async (content: string) => {
+    // Clear previous tool calls when sending new message
+    clearToolCalls();
+
     const userMessage: Message = {
       id: Date.now().toString(),
       chat_id: chatId || '',
@@ -250,7 +272,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
             </AnimatePresence>
           )}
 
-          <ChatInput onSend={handleSend} disabled={isStreaming} />
+          <ChatInput onSend={handleSend} onStop={handleStop} disabled={isStreaming} />
           
           {!isInitialState && (
             <p className="text-[10px] text-center text-muted-foreground mt-3">

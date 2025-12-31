@@ -58,15 +58,9 @@ export function MessageItem({ message, isStreaming, currentToolCalls }: MessageP
         isUser ? "border-border/50" : "border-primary/10"
       )}>
         {isUser ? (
-          <>
-            <AvatarImage src="/user-avatar.png" />
-            <AvatarFallback className="bg-muted text-muted-foreground font-bold text-xs">U</AvatarFallback>
-          </>
+          <AvatarFallback className="bg-muted text-muted-foreground font-bold text-xs">U</AvatarFallback>
         ) : (
-          <>
-            <AvatarImage src="/ai-avatar.png" />
-            <AvatarFallback className="bg-primary text-primary-foreground font-black text-xs">AI</AvatarFallback>
-          </>
+          <AvatarFallback className="bg-primary text-primary-foreground font-black text-xs">AI</AvatarFallback>
         )}
       </Avatar>
 
@@ -116,14 +110,15 @@ export function MessageItem({ message, isStreaming, currentToolCalls }: MessageP
         )}
 
         {/* 工具调用展示区 - 模仿 ChatGLM 风格 */}
-        {(toolCalls.length > 0 || (currentToolCalls && currentToolCalls.length > 0)) && (
+        {/* 在流式输出时只显示currentToolCalls，完成后才显示message.tool_calls */}
+        {(!isStreaming && toolCalls.length > 0 || (isStreaming && currentToolCalls && currentToolCalls.length > 0)) && (
           <div className={cn(
             'flex flex-col gap-3 w-full mt-2',
             isUser ? 'items-end' : 'items-start'
           )}>
             <div className="flex flex-col gap-2 w-full max-w-md">
-              {/* 正在进行的工具调用 */}
-              {currentToolCalls?.map((tc) => (
+              {/* 流式输出时：只显示正在进行的工具调用 */}
+              {isStreaming && currentToolCalls?.map((tc) => (
                 <ToolCallButton
                   key={tc.index}
                   index={tc.index}
@@ -132,8 +127,8 @@ export function MessageItem({ message, isStreaming, currentToolCalls }: MessageP
                   onClick={() => handleToolClick(tc.index)}
                 />
               ))}
-              {/* 已完成的工具调用 */}
-              {toolCalls.map((toolCall) => (
+              {/* 完成后：显示所有工具调用 */}
+              {!isStreaming && toolCalls.map((toolCall) => (
                 <ToolCallButton
                   key={toolCall.index}
                   index={toolCall.index}

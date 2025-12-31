@@ -99,16 +99,16 @@ async def create_chat(
     )
 
 
-@router.get("/{chat_id}", response_model=ChatResponse)
+@router.get("/{chat_id}")
 async def get_chat(
     chat_id: str,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
     """
-    Get a specific chat by ID
+    Get a specific chat by ID with messages
 
-    Includes message and slide counts.
+    Includes full message list and slide counts.
     """
     result = await db.execute(
         select(Chat)
@@ -124,11 +124,25 @@ async def get_chat(
             detail="Chat not found",
         )
 
-    return ChatResponse(
-        **chat.__dict__,
-        message_count=len(chat.messages),
-        slide_count=len(chat.slides),
-    )
+    # Convert chat to dict and add messages
+    chat_dict = {
+        **ChatResponse.model_validate(chat).model_dump(),
+        "message_count": len(chat.messages),
+        "slide_count": len(chat.slides),
+        "messages": [
+            {
+                "id": msg.id,
+                "chat_id": msg.chat_id,
+                "role": msg.role.value,
+                "content": msg.content,
+                "created_at": msg.created_at.isoformat(),
+                "updated_at": msg.updated_at.isoformat(),
+            }
+            for msg in chat.messages
+        ]
+    }
+
+    return chat_dict
 
 
 @router.patch("/{chat_id}", response_model=ChatResponse)
