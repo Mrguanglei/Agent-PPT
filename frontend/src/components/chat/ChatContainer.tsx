@@ -8,10 +8,10 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { WelcomeScreen } from './WelcomeScreen';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Info } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { API_URL } from '@/lib/constants';
 import type { Message, ToolCallInMessage } from '@/types/message';
+import { cn } from '@/lib/utils';
 
 interface ChatContainerProps {
   chatId?: string;
@@ -24,18 +24,14 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   const [streamingContent, setStreamingContent] = useState('');
   const [agentRunId, setAgentRunId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // 用于收集当前消息的工具调用
   const [currentToolCalls, setCurrentToolCalls] = useState<ToolCallInMessage[]>([]);
 
   const { isOpen: isToolPanelOpen } = useToolPanelStore();
 
-  // 使用 ref 存储最新的状态，避免闭包陷阱
   const streamingContentRef = useRef(streamingContent);
   const currentToolCallsRef = useRef(currentToolCalls);
   const chatIdRef = useRef(chatId);
 
-  // 更新 refs
   useEffect(() => {
     streamingContentRef.current = streamingContent;
     currentToolCallsRef.current = currentToolCalls;
@@ -44,7 +40,10 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
 
   // 加载历史消息
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId) {
+      setMessages([]);
+      return;
+    }
 
     const loadMessages = async () => {
       setIsLoading(true);
@@ -57,7 +56,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Chat data:', data);
+          setMessages(data.messages || []);
         }
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -69,18 +68,17 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     loadMessages();
   }, [chatId]);
 
-  // Auto scroll to bottom
   const scrollToBottom = useCallback(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingContent, scrollToBottom]);
+  }, [messages, streamingContent, currentToolCalls, scrollToBottom]);
 
-  // 使用 useCallback 稳定回调函数
   const handleComplete = useCallback(() => {
-    // 使用 ref 获取最新值
     const content = streamingContentRef.current;
     const tools = currentToolCallsRef.current;
     const currentChatId = chatIdRef.current;
@@ -116,23 +114,15 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   }, []);
 
   const handleToolCallStart = useCallback((index: number, name: string) => {
-    // 添加新的工具调用
     const newToolCall: ToolCallInMessage = {
       index,
       name,
       status: 'running',
     };
     setCurrentToolCalls((prev) => [...prev, newToolCall]);
-
-    // 自动打开第一个工具的面板
-    if (index === 0) {
-      const { openPanel } = useToolPanelStore.getState();
-      openPanel(0);
-    }
   }, []);
 
   const handleToolCallProgress = useCallback((index: number, name: string, status: any, params?: any) => {
-    // 更新工具调用状态
     setCurrentToolCalls((prev) =>
       prev.map((tc) =>
         tc.index === index ? { ...tc, status, params } : tc
@@ -141,7 +131,6 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   }, []);
 
   const handleToolCallComplete = useCallback((index: number, name: string, status: any, result?: any, error?: string) => {
-    // 更新工具调用完成状态
     setCurrentToolCalls((prev) =>
       prev.map((tc) =>
         tc.index === index
@@ -151,7 +140,6 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     );
   }, []);
 
-  // SSE stream handling
   useAgentStream({
     agentRunId,
     onMessage: handleMessage,
@@ -162,9 +150,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     onError: handleError,
   });
 
-  // Send message
   const handleSend = async (content: string) => {
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       chat_id: chatId || '',
@@ -202,12 +188,13 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     }
   };
 
-  // Show loading state
+  const isInitialState = !chatId && messages.length === 0;
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-sm font-medium text-muted-foreground">正在加载对话...</p>
         </div>
       </div>
@@ -215,27 +202,14 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   }
 
   return (
-    <motion.div
-      className="flex-1 flex flex-col min-h-0 bg-background"
-      animate={{
-        marginRight: (() => {
-          if (!isToolPanelOpen) return 0;
-          if (typeof window !== 'undefined' && window.innerWidth > 56 * 16) {
-            return 56 * 16;
-          }
-          return 0;
-        })(),
-      }}
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-      }}
-    >
-      {/* Message Area */}
-      <ScrollArea className="flex-1">
-        <div className="max-w-4xl mx-auto w-full">
-          {!chatId && messages.length === 0 ? (
+    <div className="flex-1 flex flex-col min-h-0 relative">
+      {/* Message Area - 只有这里滚动 */}
+      <div className="flex-1 overflow-y-auto scrollbar-none">
+        <div className={cn(
+          "max-w-4xl mx-auto w-full px-4",
+          isInitialState ? "h-full flex items-center justify-center" : "py-8"
+        )}>
+          {isInitialState ? (
             <WelcomeScreen onSend={handleSend} />
           ) : (
             <div className="flex flex-col w-full">
@@ -245,37 +219,46 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
                 isStreaming={isStreaming}
                 currentToolCalls={currentToolCalls}
               />
-              <div ref={scrollRef} className="h-4" />
+              <div ref={scrollRef} className="h-20" />
             </div>
           )}
         </div>
-      </ScrollArea>
-
-      {/* Input Area - Floating style like ChatGLM */}
-      <div className="w-full bg-gradient-to-t from-background via-background to-transparent pt-10 relative">
-        {/* 状态提示条 - ChatGLM 风格 */}
-        <AnimatePresence>
-          {isStreaming && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="absolute -top-2 left-1/2 -translate-x-1/2 z-30"
-            >
-              <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-card border border-border shadow-lg backdrop-blur-md">
-                <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
-                <span className="text-[11px] font-bold text-foreground/80 uppercase tracking-wider">
-                  {currentToolCalls.length > 0 ? '正在执行任务规划...' : '正在思考中...'}
-                </span>
-                <div className="w-px h-3 bg-border mx-1" />
-                <span className="text-[10px] text-muted-foreground">您可以随时离开，任务将在后台继续</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <ChatInput onSend={handleSend} disabled={isStreaming} />
       </div>
-    </motion.div>
+
+      {/* Input Area - 固定在底部 */}
+      <div className={cn(
+        "w-full bg-gradient-to-t from-background via-background to-transparent pb-8 pt-10 px-4 z-20",
+        isInitialState ? "absolute bottom-0 left-0 right-0" : "relative"
+      )}>
+        <div className="max-w-4xl mx-auto w-full relative">
+          {/* 状态提示条 - 仅在非初始状态且正在流式输出时显示在输入框上方 */}
+          {!isInitialState && isStreaming && (
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute -top-12 left-1/2 -translate-x-1/2 z-30"
+              >
+                <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-card border border-border shadow-lg backdrop-blur-md">
+                  <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+                  <span className="text-[11px] font-bold text-foreground/80 uppercase tracking-wider">
+                    {currentToolCalls.length > 0 ? '正在执行任务规划...' : '正在思考中...'}
+                  </span>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          )}
+
+          <ChatInput onSend={handleSend} disabled={isStreaming} />
+          
+          {!isInitialState && (
+            <p className="text-[10px] text-center text-muted-foreground mt-3">
+              Agent-PPT 可能会产生错误，请核查重要信息。
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
