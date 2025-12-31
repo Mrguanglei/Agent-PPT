@@ -1,6 +1,7 @@
 """
 Agent Runner - Main Agent execution logic
 """
+import asyncio
 import json
 import time
 from typing import List, Dict, Any, AsyncGenerator
@@ -47,18 +48,26 @@ class AgentRunner:
         pubsub = await redis_client.subscribe(stop_channel)
         try:
             async for message in pubsub.listen():
+                if self.is_stopped:  # Check flag before processing
+                    break
                 if message['type'] == 'message':
                     data = json.loads(message['data'])
                     if data.get('action') == 'stop':
                         self.is_stopped = True
                         break
+        except asyncio.CancelledError:
+            # Task was cancelled, exit gracefully
+            pass
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning(f"Stop listener error: {e}")
         finally:
             try:
+                # Don't close pubsub if it's still being iterated
+                # Just unsubscribe and let it clean up naturally
                 await pubsub.unsubscribe(stop_channel)
-                await pubsub.close()
+            except asyncio.CancelledError:
+                pass
             except Exception:
                 pass  # Ignore cleanup errors
 
@@ -109,7 +118,6 @@ class AgentRunner:
 
         try:
             # Start listening for stop signal
-            import asyncio
             stop_task = asyncio.create_task(self._listen_for_stop())
 
             # Main conversation loop
