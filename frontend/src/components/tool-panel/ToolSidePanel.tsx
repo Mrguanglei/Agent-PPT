@@ -209,7 +209,7 @@ export function ToolSidePanel() {
                       </div>
                       <div className="p-5">
                         <pre className="text-xs font-mono text-muted-foreground bg-muted/20 p-4 rounded-xl overflow-x-auto">
-                          {JSON.stringify(selectedTool.args, null, 2)}
+                          {JSON.stringify(selectedTool.params, null, 2)}
                         </pre>
                       </div>
                     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAgentStream } from '@/hooks/useAgentStream';
 import { useToolPanelStore } from '@/stores/toolPanelStore';
 import { MessageList } from './MessageList';
