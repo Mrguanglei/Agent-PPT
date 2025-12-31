@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Paperclip, StopCircle } from 'lucide-react';
+import { Send, Paperclip, StopCircle, Mic, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +12,7 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export function ChatInput({ onSend, disabled, placeholder = 'Type a message...' }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, placeholder = '输入您的问题或指令...' }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,73 +42,102 @@ export function ChatInput({ onSend, disabled, placeholder = 'Type a message...' 
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6">
+    <div className="max-w-4xl mx-auto w-full px-4 pb-4">
       <div
         className={cn(
-          'relative flex items-end gap-3 p-4 rounded-2xl',
-          'bg-card border border-border shadow-sm',
-          'focus-within:border-primary/40 focus-within:shadow-md',
-          'transition-all duration-200'
+          'relative flex flex-col p-2 rounded-[24px]',
+          'bg-card border border-border shadow-lg',
+          'focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5',
+          'transition-all duration-300 ease-out'
         )}
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 flex-shrink-0 hover:bg-muted"
-          disabled={disabled}
-        >
-          <Paperclip className="h-4 w-4 text-muted-foreground" />
-        </Button>
+        {/* 输入区域 */}
+        <div className="flex items-end gap-2 px-2">
+          <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              adjustHeight();
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            disabled={disabled}
+            rows={1}
+            className={cn(
+              'flex-1 resize-none bg-transparent',
+              'text-[15px] text-foreground placeholder:text-muted-foreground/60',
+              'focus:outline-none',
+              'min-h-[44px] max-h-[200px] py-3 px-2',
+              'scrollbar-none'
+            )}
+          />
+        </div>
 
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            adjustHeight();
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled}
-          rows={1}
-          className={cn(
-            'flex-1 resize-none bg-transparent',
-            'text-foreground placeholder:text-muted-foreground',
-            'focus:outline-none',
-            'max-h-[200px] py-3',
-            'scrollbar-modern'
-          )}
-        />
-
-        <motion.div whileTap={{ scale: 0.95 }}>
-          {disabled ? (
+        {/* 工具栏区域 */}
+        <div className="flex items-center justify-between mt-1 px-1">
+          <div className="flex items-center gap-1">
             <Button
+              variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-xl bg-destructive hover:bg-destructive/90 shadow-sm"
-              disabled={!disabled} // Allow stopping
+              className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/5"
+              disabled={disabled}
             >
-              <StopCircle className="h-4 w-4" />
+              <Paperclip className="h-4.5 w-4.5" />
             </Button>
-          ) : (
             <Button
+              variant="ghost"
               size="icon"
-              onClick={handleSubmit}
-              disabled={!value.trim()}
-              className={cn(
-                'h-10 w-10 rounded-xl shadow-sm',
-                'bg-primary hover:bg-primary/90',
-                'disabled:opacity-50 disabled:cursor-not-allowed'
+              className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/5"
+              disabled={disabled}
+            >
+              <ImageIcon className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/5"
+              disabled={disabled}
+            >
+              <Mic className="h-4.5 w-4.5" />
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-muted-foreground/60 font-medium hidden sm:inline-block">
+              {value.length} / 2000
+            </span>
+            <motion.div whileTap={{ scale: 0.92 }}>
+              {disabled ? (
+                <Button
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-destructive hover:bg-destructive/90 shadow-md"
+                >
+                  <StopCircle className="h-4.5 w-4.5" />
+                </Button>
+              ) : (
+                <Button
+                  size="icon"
+                  onClick={handleSubmit}
+                  disabled={!value.trim()}
+                  className={cn(
+                    'h-9 w-9 rounded-full shadow-md transition-all duration-300',
+                    value.trim() 
+                      ? 'bg-primary text-primary-foreground scale-100' 
+                      : 'bg-muted text-muted-foreground scale-95 opacity-50'
+                  )}
+                >
+                  <Send className="h-4.5 w-4.5" />
+                </Button>
               )}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          )}
-        </motion.div>
+            </motion.div>
+          </div>
+        </div>
       </div>
-      <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-        <span>输入消息与 AI 对话，创建精彩的演示文稿</span>
-        <span>按 Enter 发送，Shift + Enter 换行</span>
-      </div>
+      
+      <p className="text-center mt-3 text-[11px] text-muted-foreground/50 font-medium">
+        PPT Agent 可能会产生错误，请核查重要信息。
+      </p>
     </div>
   );
 }

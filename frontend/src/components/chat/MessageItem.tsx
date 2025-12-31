@@ -25,62 +25,69 @@ export function MessageItem({ message }: MessageProps) {
   };
 
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <Avatar className="h-8 w-8 flex-shrink-0">
+    <div className={cn(
+      'flex gap-4 w-full py-6 px-4 transition-colors hover:bg-muted/5',
+      isUser ? 'flex-row-reverse' : 'flex-row'
+    )}>
+      {/* 头像 */}
+      <Avatar className="h-9 w-9 flex-shrink-0 border border-border/50 shadow-sm">
         {isUser ? (
-          <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
+          <AvatarFallback className="bg-primary text-primary-foreground font-bold">U</AvatarFallback>
         ) : (
-          <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold">
             AI
           </AvatarFallback>
         )}
       </Avatar>
 
-      <div className={`flex-1 space-y-2 ${isUser ? 'items-end' : ''}`}>
-        <div className={`flex items-center gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
-          <p className="text-sm font-medium text-foreground">
-            {isUser ? 'You' : 'PPT Agent'}
-          </p>
-          <span className="text-xs text-muted-foreground">{formatDate(message.created_at)}</span>
-        </div>
-
+      {/* 消息内容区 */}
+      <div className={cn(
+        'flex flex-col max-w-[85%] gap-2',
+        isUser ? 'items-end' : 'items-start'
+      )}>
+        {/* 角色与时间 */}
         <div className={cn(
-          'max-w-[720px] rounded-2xl px-4 py-3 shadow-sm',
-          isUser
-            ? 'bg-card text-foreground ml-auto' // 用户气泡为白色卡片并右对齐
-            : 'bg-muted text-foreground'
+          'flex items-center gap-2 mb-1',
+          isUser ? 'flex-row-reverse' : 'flex-row'
         )}>
-          <p className={cn('whitespace-pre-wrap leading-relaxed', isUser ? 'text-foreground' : 'text-foreground')}>
-            {message.content}
-          </p>
+          <span className="text-sm font-bold text-foreground/90">
+            {isUser ? '您' : 'PPT Agent'}
+          </span>
+          <span className="text-[11px] text-muted-foreground font-medium">
+            {formatDate(message.created_at)}
+          </span>
         </div>
 
-        {/* Tool Call Buttons - 按顺序往下显示 */}
+        {/* 文本消息气泡 */}
+        {message.content && (
+          <div className={cn(
+            'relative px-5 py-3.5 rounded-2xl shadow-sm leading-relaxed text-[15px]',
+            isUser
+              ? 'bg-primary text-primary-foreground rounded-tr-none'
+              : 'bg-card border border-border/50 text-foreground rounded-tl-none'
+          )}>
+            <p className="whitespace-pre-wrap">
+              {message.content}
+            </p>
+          </div>
+        )}
+
+        {/* 工具调用展示区 - 模仿 ChatGLM 风格 */}
         {toolCalls.length > 0 && (
           <div className={cn(
-            'max-w-[80%] rounded-2xl px-4 py-3',
-            isUser
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-foreground'
+            'flex flex-col gap-3 w-full mt-2',
+            isUser ? 'items-end' : 'items-start'
           )}>
-            <div className="space-y-2">
-              <p className={cn(
-                'text-xs font-medium uppercase tracking-wide',
-                isUser ? 'text-primary-foreground/80' : 'text-muted-foreground'
-              )}>
-                已执行工具
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {toolCalls.map((toolCall) => (
-                  <ToolCallButton
-                    key={toolCall.index}
-                    index={toolCall.index}
-                    name={toolCall.name}
-                    status={toolCall.status}
-                    onClick={() => handleToolClick(toolCall.index)}
-                  />
-                ))}
-              </div>
+            <div className="flex flex-col gap-2 w-full max-w-md">
+              {toolCalls.map((toolCall) => (
+                <ToolCallButton
+                  key={toolCall.index}
+                  index={toolCall.index}
+                  name={toolCall.name}
+                  status={toolCall.status}
+                  onClick={() => handleToolClick(toolCall.index)}
+                />
+              ))}
             </div>
           </div>
         )}

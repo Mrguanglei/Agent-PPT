@@ -9,6 +9,7 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ToolCallStatus } from '@/types/tool';
@@ -28,7 +29,7 @@ const TOOL_LABELS: Record<string, string> = {
   think: '思考规划',
   initialize_slide: '初始化幻灯片',
   insert_slides: '插入页面',
-  html: '生成HTML',
+  html: '生成内容',
   update_slide: '更新页面',
   web_search: '网页搜索',
   search_images: '图片搜索',
@@ -47,35 +48,54 @@ export function ToolCallButton({ index, name, status, onClick }: ToolCallButtonP
 
   return (
     <motion.button
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ backgroundColor: 'var(--accent)' }}
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg',
-        'text-sm font-medium transition-all',
-        'border cursor-pointer',
-
-        // 状态样式
-        status === 'pending' && 'bg-muted border-border text-muted-foreground',
-        status === 'running' && 'bg-primary/10 border-primary/30 text-primary',
-        status === 'success' && 'bg-green-500/10 border-green-500/30 text-green-500',
-        status === 'failed' && 'bg-destructive/10 border-destructive/30 text-destructive',
+        'group flex items-center justify-between w-full max-w-sm px-4 py-3 rounded-xl transition-all duration-200',
+        'border border-border/50 bg-card/30 backdrop-blur-sm shadow-sm hover:shadow-md',
+        'text-sm font-medium cursor-pointer'
       )}
     >
-      {/* 状态图标 */}
-      {status === 'running' ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : status === 'success' ? (
-        <CheckCircle className="w-4 h-4" />
-      ) : status === 'failed' ? (
-        <XCircle className="w-4 h-4" />
-      ) : (
-        <Icon className="w-4 h-4" />
-      )}
+      <div className="flex items-center gap-3">
+        {/* 工具图标容器 */}
+        <div className={cn(
+          'flex items-center justify-center w-8 h-8 rounded-lg transition-colors',
+          status === 'running' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
+        )}>
+          {status === 'running' ? (
+            <Loader2 className="w-4.5 h-4.5 animate-spin" />
+          ) : (
+            <Icon className="w-4.5 h-4.5" />
+          )}
+        </div>
 
-      <span>{TOOL_LABELS[name] || name}</span>
+        {/* 文字信息 */}
+        <div className="flex flex-col items-start gap-0.5">
+          <span className="text-foreground font-semibold">
+            {TOOL_LABELS[name] || name}
+          </span>
+          <span className={cn(
+            'text-[11px] uppercase tracking-wider font-bold',
+            status === 'running' && 'text-primary animate-pulse',
+            status === 'success' && 'text-success',
+            status === 'failed' && 'text-destructive',
+            status === 'pending' && 'text-muted-foreground'
+          )}>
+            {status === 'running' ? '正在执行...' : 
+             status === 'success' ? '执行成功' : 
+             status === 'failed' ? '执行失败' : '等待中'}
+          </span>
+        </div>
+      </div>
+
+      {/* 右侧指示器 */}
+      <div className="flex items-center gap-2">
+        {status === 'success' && <CheckCircle className="w-4 h-4 text-success" />}
+        {status === 'failed' && <XCircle className="w-4 h-4 text-destructive" />}
+        <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
+      </div>
     </motion.button>
   );
 }

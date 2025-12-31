@@ -5,26 +5,26 @@
 @layer base {
   :root {
     /* 采用 OKLCH 颜色空间，提供更好的颜色准确性和可访问性 */
-    --background: oklch(0.9741 0 129.63);
-    --foreground: oklch(0.2277 0.0034 67.65);
-    --card: oklch(98.46% 0.002 247.84);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(0.9924 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(54.65% 0.246 262.87);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.93 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.1149 0 0 / 6%);
-    --accent-foreground: oklch(0.145 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(0.1149 0 0 / 8%);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --radius: 1rem;
+    --background: oklch(0.99 0 0);
+    --foreground: oklch(0.2 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.2 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.2 0 0);
+    --primary: oklch(0.45 0.18 260);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.96 0.01 260);
+    --secondary-foreground: oklch(0.2 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.5 0 0);
+    --accent: oklch(0.95 0.02 260);
+    --accent-foreground: oklch(0.2 0 0);
+    --destructive: oklch(0.6 0.2 25);
+    --destructive-foreground: oklch(0.99 0 0);
+    --border: oklch(0.92 0 0);
+    --input: oklch(0.92 0 0);
+    --ring: oklch(0.45 0.18 260 / 0.5);
+    --radius: 0.75rem;
     /* 字体变量（首选 Roobert / Inter，回退到系统无衬线） */
     --font-sans: 'Roobert', 'Inter', ui-sans-serif, system-ui, -apple-system,
       'Segoe UI', 'Helvetica Neue', 'Noto Sans', sans-serif;

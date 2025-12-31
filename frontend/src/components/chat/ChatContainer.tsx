@@ -55,12 +55,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
 
         if (response.ok) {
           const data = await response.json();
-          // 注意：后端返回的 data 中可能直接包含 messages 数组，或者在其他字段中
-          // 这里假设 messages 在 Chat 对象的关联中
-          // 如果后端结构不同，需要相应调整
           console.log('Chat data:', data);
-
-          // 暂时使用已有的消息，等确认后端结构后再调整
         }
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -209,21 +204,20 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-muted-foreground">加载中...</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p className="text-sm font-medium text-muted-foreground">正在加载对话...</p>
+        </div>
       </div>
     );
   }
 
-  // Note: always render main layout so input stays fixed at bottom.
-  // When there is no chat and no messages, show WelcomeScreen in message area.
-
   return (
     <motion.div
-      className="flex-1 flex flex-col min-h-0 content-fade-in"
+      className="flex-1 flex flex-col min-h-0 bg-background"
       animate={{
         marginRight: (() => {
           if (!isToolPanelOpen) return 0;
-          // match panel width logic: 56rem = 896px, else full width on small screens
           if (typeof window !== 'undefined' && window.innerWidth > 56 * 16) {
             return 56 * 16;
           }
@@ -232,37 +226,32 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
       }}
       transition={{
         type: 'spring',
-        stiffness: 280,
-        damping: 35,
-        mass: 0.8
+        stiffness: 300,
+        damping: 30,
       }}
     >
       {/* Message Area */}
-      <ScrollArea className="flex-1 scrollbar-modern">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="space-y-6">
-            {!chatId && messages.length === 0 ? (
-              <WelcomeScreen onSend={handleSend} />
-            ) : (
-              <>
-                <MessageList
-                  messages={messages}
-                  streamingContent={streamingContent}
-                  isStreaming={isStreaming}
-                  currentToolCalls={currentToolCalls}
-                />
-                <div ref={scrollRef} />
-              </>
-            )}
-          </div>
+      <ScrollArea className="flex-1">
+        <div className="max-w-4xl mx-auto w-full">
+          {!chatId && messages.length === 0 ? (
+            <WelcomeScreen onSend={handleSend} />
+          ) : (
+            <div className="flex flex-col w-full">
+              <MessageList
+                messages={messages}
+                streamingContent={streamingContent}
+                isStreaming={isStreaming}
+                currentToolCalls={currentToolCalls}
+              />
+              <div ref={scrollRef} className="h-4" />
+            </div>
+          )}
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <div className="sticky bottom-0 z-20 border-t border-border/50 bg-card/50 backdrop-blur-sm p-6">
-        <div className="max-w-4xl mx-auto">
-          <ChatInput onSend={handleSend} disabled={isStreaming} />
-        </div>
+      {/* Input Area - Floating style like ChatGLM */}
+      <div className="w-full bg-gradient-to-t from-background via-background to-transparent pt-10">
+        <ChatInput onSend={handleSend} disabled={isStreaming} />
       </div>
     </motion.div>
   );
