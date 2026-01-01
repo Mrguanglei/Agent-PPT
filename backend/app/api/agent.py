@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.chat import Chat, ChatStatus
 from app.models.message import Message, MessageRole
+from app.models.tool_call import ToolCall
 from app.models.user import User
 from app.schemas.agent import AgentRunRequest, AgentRunResponse
 from app.schemas.message import MessageCreate
@@ -155,4 +156,60 @@ async def get_chat_history(
     return {
         "chat_id": str(chat.id),
         "messages": messages,
+    }
+
+
+@router.get("/tool-calls/{chat_id}")
+async def get_chat_tool_calls(
+    chat_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """
+    Get tool calls for a specific chat
+
+    Returns all tool calls in chronological order.
+    """
+    # Validate chat ownership
+    result = await db.execute(
+        select(Chat)
+        .where(Chat.id == chat_id, Chat.user_id == current_user.id)
+    )
+    chat = result.scalar_one_or_none()
+
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found",
+        )
+
+    # Get tool calls for this chat
+    tool_calls_result = await db.execute(
+        select(ToolCall)
+        .where(ToolCall.chat_id == chat_id)
+        .order_by(ToolCall.created_at)
+        .options(selectinload(ToolCall.message))
+    )
+    tool_calls = tool_calls_result.scalars().all()
+
+    # Format tool calls
+    formatted_tool_calls = []
+    for tc in tool_calls:
+        formatted_tool_calls.append({
+            "id": str(tc.id),
+            "tool_call_id": tc.tool_call_id,
+            "tool_name": tc.tool_name,
+            "tool_params": tc.tool_params,
+            "tool_result": tc.tool_result,
+            "status": tc.status.value,
+            "execution_time": tc.execution_time,
+            "error_message": tc.error_message,
+            "created_at": tc.created_at.isoformat(),
+            "updated_at": tc.updated_at.isoformat(),
+            "message_id": str(tc.message_id) if tc.message_id else None,
+        })
+
+    return {
+        "chat_id": str(chat.id),
+        "tool_calls": formatted_tool_calls,
     }

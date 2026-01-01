@@ -20,12 +20,15 @@ async def web_search(
     Returns:
         List of search results with title, URL, snippet, and metadata
     """
+    print(f"[DEBUG] web_search called with queries={queries}, chat_id={chat_id}")
     results = []
 
     # Get API key from environment
     api_key = getattr(settings, 'bocha_api_key', None) or getattr(settings, 'serper_api_key', None)
+    print(f"[DEBUG] web_search api_key available: {bool(api_key)}")
 
     if not api_key:
+        print(f"[DEBUG] web_search returning no API key error")
         return [{
             "title": "搜索不可用",
             "url": "",
@@ -53,7 +56,9 @@ async def web_search(
 
                 if response.status_code == 200:
                     data = response.json()
+                    print(f"[DEBUG] web_search API response: {data}")
                     web_pages = data.get("data", {}).get("webPages", {}).get("value", [])
+                    print(f"[DEBUG] web_search found {len(web_pages)} results")
 
                     for item in web_pages:
                         results.append({
@@ -68,6 +73,7 @@ async def web_search(
                         })
                 else:
                     # API error
+                    print(f"[DEBUG] web_search API error: {response.status_code}")
                     results.append({
                         "title": "搜索失败",
                         "url": "",
@@ -76,6 +82,7 @@ async def web_search(
                         "error": True,
                     })
     except Exception as e:
+        print(f"[DEBUG] web_search exception: {str(e)}")
         return [{
             "title": "搜索错误",
             "url": "",
@@ -84,4 +91,5 @@ async def web_search(
             "error": True,
         }]
 
+    print(f"[DEBUG] web_search returning {len(results)} results")
     return results

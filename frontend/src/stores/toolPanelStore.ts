@@ -20,8 +20,8 @@ export const useToolPanelStore = create<ToolPanelState>((set) => ({
   toolCalls: [],
 
   openPanel: (index) => set({ isOpen: true, selectedIndex: index ?? null }),
-  closePanel: () => set({ isOpen: false }),
-  selectTool: (index) => set({ selectedIndex: index, isOpen: true }),
+  closePanel: () => set({ isOpen: false, selectedIndex: null }),
+  selectTool: (index) => set({ selectedIndex: index }), // 只设置选中索引，不自动打开面板
 
   addToolCall: (tool) => set((state) => ({
     toolCalls: [...state.toolCalls, { ...tool, id: `tool-${Date.now()}-${Math.random()}` }]

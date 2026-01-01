@@ -28,30 +28,6 @@ export function useAgentStream({
   const eventSourceRef = useRef<EventSource | null>(null);
   const { addToolCall, updateToolCall, openPanel } = useToolPanelStore();
 
-  // 使用 ref 存储回调函数，确保使用最新的回调
-  const callbacksRef = useRef({
-    onMessage,
-    onToolCallStart,
-    onToolCallProgress,
-    onToolCallComplete,
-    onSlideUpdate,
-    onComplete,
-    onError,
-  });
-
-  // 更新回调 ref
-  useEffect(() => {
-    callbacksRef.current = {
-      onMessage,
-      onToolCallStart,
-      onToolCallProgress,
-      onToolCallComplete,
-      onSlideUpdate,
-      onComplete,
-      onError,
-    };
-  }, [onMessage, onToolCallStart, onToolCallProgress, onToolCallComplete, onSlideUpdate, onComplete, onError]);
-
   useEffect(() => {
     if (!agentRunId) return;
 
@@ -63,7 +39,6 @@ export function useAgentStream({
 
     if (!token) {
       console.error('No authentication token found');
-      const { onError } = callbacksRef.current;
       if (onError) {
         onError('Authentication required');
       }
@@ -79,7 +54,6 @@ export function useAgentStream({
 
     // Handle message events (streaming text)
     eventSource.addEventListener('message', (e: MessageEvent) => {
-      const { onMessage } = callbacksRef.current;
       try {
         const data = JSON.parse(e.data);
         if (data.content && onMessage) {
@@ -92,7 +66,6 @@ export function useAgentStream({
 
     // Handle tool_call_start events
     eventSource.addEventListener('tool_call_start', (e: MessageEvent) => {
-      const { onToolCallStart } = callbacksRef.current;
       try {
         const data = JSON.parse(e.data);
         const { tool_index, tool_name } = data;
@@ -119,7 +92,6 @@ export function useAgentStream({
 
     // Handle tool_call_progress events
     eventSource.addEventListener('tool_call_progress', (e: MessageEvent) => {
-      const { onToolCallProgress } = callbacksRef.current;
       try {
         const data = JSON.parse(e.data);
         const { tool_index, tool_name, status, params } = data;
@@ -136,7 +108,6 @@ export function useAgentStream({
 
     // Handle tool_call_complete events
     eventSource.addEventListener('tool_call_complete', (e: MessageEvent) => {
-      const { onToolCallComplete } = callbacksRef.current;
       try {
         const data = JSON.parse(e.data);
         const { tool_index, tool_name, status, result, error, execution_time } = data;
@@ -153,7 +124,6 @@ export function useAgentStream({
 
     // Handle slide_update events
     eventSource.addEventListener('slide_update', (e: MessageEvent) => {
-      const { onSlideUpdate } = callbacksRef.current;
       try {
         const data = JSON.parse(e.data);
         if (onSlideUpdate) {
@@ -166,7 +136,6 @@ export function useAgentStream({
 
     // Handle done event
     eventSource.addEventListener('done', (e: MessageEvent) => {
-      const { onComplete } = callbacksRef.current;
       try {
         const data = JSON.parse(e.data);
         if (onComplete) {
@@ -180,7 +149,6 @@ export function useAgentStream({
 
     // Handle error event
     eventSource.addEventListener('error', (e: MessageEvent) => {
-      const { onError } = callbacksRef.current;
       try {
         // Check if data exists and is valid JSON
         if (e.data && e.data !== 'undefined') {
@@ -206,7 +174,6 @@ export function useAgentStream({
 
     // Handle connection errors
     eventSource.onerror = (err) => {
-      const { onError } = callbacksRef.current;
       console.error('EventSource error:', err);
       if (onError) {
         onError('Connection error');
@@ -217,7 +184,7 @@ export function useAgentStream({
     return () => {
       eventSource.close();
     };
-  }, [agentRunId, addToolCall, updateToolCall, openPanel]); // 只依赖 agentRunId 和稳定的函数
+  }, [agentRunId]); // Only depend on agentRunId, functions are stable from zustand store
 
   const closeConnection = useCallback(() => {
     if (eventSourceRef.current) {

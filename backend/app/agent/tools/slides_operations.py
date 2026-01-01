@@ -290,6 +290,7 @@ async def html(
                 "slide_id": str(slide.id),
                 "index": index,
                 "html_length": len(html_code),
+                "html_code": html_code,  # Include the actual HTML code for frontend display
             }
 
         except Exception as e:

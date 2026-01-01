@@ -14,6 +14,7 @@ from app.utils.redis_client import redis_client
 from app.database import async_session_maker
 from app.models.message import Message, MessageRole
 from app.models.chat import Chat
+from app.models.tool_call import ToolCall, ToolCallStatus
 from sqlalchemy import select
 
 
@@ -99,6 +100,54 @@ class AgentRunner:
             await db.refresh(message)
             return message
 
+    async def save_tool_call(self, tool_call_id: str, tool_name: str, params: dict = None,
+                           status: ToolCallStatus = ToolCallStatus.PENDING,
+                           result: dict = None, execution_time: float = None,
+                           error_message: str = None, message_id: str = None) -> ToolCall:
+        """Save or update a tool call to the database"""
+        async with self.session_maker() as db:
+            # Try to find existing tool call
+            existing_tool_call = None
+            if tool_call_id:
+                result_query = await db.execute(
+                    select(ToolCall).where(
+                        ToolCall.chat_id == self.chat_id,
+                        ToolCall.tool_call_id == tool_call_id
+                    )
+                )
+                existing_tool_call = result_query.scalar_one_or_none()
+
+            if existing_tool_call:
+                # Update existing tool call
+                existing_tool_call.status = status
+                if result is not None:
+                    existing_tool_call.tool_result = result
+                if execution_time is not None:
+                    existing_tool_call.execution_time = execution_time
+                if error_message is not None:
+                    existing_tool_call.error_message = error_message
+                if message_id is not None:
+                    existing_tool_call.message_id = message_id
+                tool_call = existing_tool_call
+            else:
+                # Create new tool call
+                tool_call = ToolCall(
+                    chat_id=self.chat_id,
+                    message_id=message_id,
+                    tool_name=tool_name,
+                    tool_params=params,
+                    tool_result=result,
+                    status=status,
+                    execution_time=execution_time,
+                    error_message=error_message,
+                    tool_call_id=tool_call_id,
+                )
+                db.add(tool_call)
+
+            await db.commit()
+            await db.refresh(tool_call)
+            return tool_call
+
     async def run(self, user_message: str) -> None:
         """Execute the Agent conversation loop"""
 
@@ -178,6 +227,14 @@ class AgentRunner:
                                         "tool_name": tc.function.name,
                                     })
 
+                                    # Save tool call to database
+                                    await self.save_tool_call(
+                                        tool_call_id=tc.id,
+                                        tool_name=tc.function.name,
+                                        params={},
+                                        status=ToolCallStatus.PENDING
+                                    )
+
                             if tc.id:
                                 tool_calls_buffer[idx]["id"] = tc.id
 
@@ -215,84 +272,122 @@ class AgentRunner:
                             tool_name = tc["name"]
                             args = json.loads(tc["arguments"]) if tc.get("arguments") else {}
 
-                        # Publish tool call progress
-                        await self._publish("tool_call_progress", {
-                            "tool_index": idx,
-                            "tool_name": tool_name,
-                            "status": "running",
-                            "params": args,
-                        })
-
-                        # Execute tool
-                        start_time = time.time()
-                        try:
-                            result = await execute_tool(tool_name, chat_id=self.chat_id, **args)
-                            execution_time = time.time() - start_time
-
-                            # Publish success
-                            await self._publish("tool_call_complete", {
+                            # Publish tool call progress
+                            await self._publish("tool_call_progress", {
                                 "tool_index": idx,
                                 "tool_name": tool_name,
-                                "status": "success",
-                                "result": result,
-                                "execution_time": execution_time,
+                                "status": "running",
+                                "params": args,
                             })
 
-                            # Add to messages
-                            messages.append({
-                                "role": "assistant",
-                                "tool_calls": [{
-                                    "id": tc["id"],
-                                    "type": "function",
-                                    "function": {
-                                        "name": tool_name,
-                                        "arguments": tc["arguments"]
-                                    }
-                                }]
-                            })
-                            messages.append({
-                                "role": "tool",
-                                "tool_call_id": tc["id"],
-                                "content": json.dumps(result),
-                            })
+                            # Update tool call status to running
+                            await self.save_tool_call(
+                                tool_call_id=tc["id"],
+                                tool_name=tool_name,
+                                params=args,
+                                status=ToolCallStatus.RUNNING
+                            )
 
-                        except Exception as e:
-                            execution_time = time.time() - start_time
-                            error_msg = str(e)
+                            # Execute tool
+                            start_time = time.time()
+                            try:
+                                print(f"[DEBUG] AgentRunner executing tool: {tool_name} with args: {args}")
+                                result = await execute_tool(tool_name, chat_id=self.chat_id, **args)
+                                print(f"[DEBUG] AgentRunner tool {tool_name} returned: {result}")
+                                execution_time = time.time() - start_time
 
-                            # Publish error
-                            await self._publish("tool_call_complete", {
-                                "tool_index": idx,
-                                "tool_name": tool_name,
-                                "status": "failed",
-                                "error": error_msg,
-                                "execution_time": execution_time,
-                            })
+                                # Update tool call status to success
+                                await self.save_tool_call(
+                                    tool_call_id=tc["id"],
+                                    tool_name=tool_name,
+                                    result=result,
+                                    execution_time=execution_time,
+                                    status=ToolCallStatus.SUCCESS
+                                )
 
-                            # Add error to messages
-                            messages.append({
-                                "role": "assistant",
-                                "tool_calls": [{
-                                    "id": tc["id"],
-                                    "type": "function",
-                                    "function": {
-                                        "name": tool_name,
-                                        "arguments": tc["arguments"]
-                                    }
-                                }]
-                            })
-                            messages.append({
-                                "role": "tool",
-                                "tool_call_id": tc["id"],
-                                "content": json.dumps({"error": error_msg}),
-                            })
+                                # Publish success
+                                await self._publish("tool_call_complete", {
+                                    "tool_index": idx,
+                                    "tool_name": tool_name,
+                                    "status": "success",
+                                    "result": result,
+                                    "execution_time": execution_time,
+                                })
+
+                                # Add to messages
+                                messages.append({
+                                    "role": "assistant",
+                                    "tool_calls": [{
+                                        "id": tc["id"],
+                                        "type": "function",
+                                        "function": {
+                                            "name": tool_name,
+                                            "arguments": tc["arguments"]
+                                        }
+                                    }]
+                                })
+                                messages.append({
+                                    "role": "tool",
+                                    "tool_call_id": tc["id"],
+                                    "content": json.dumps(result),
+                                })
+
+                            except Exception as e:
+                                execution_time = time.time() - start_time
+                                error_msg = str(e)
+
+                                # Update tool call status to failed
+                                await self.save_tool_call(
+                                    tool_call_id=tc["id"],
+                                    tool_name=tool_name,
+                                    error_message=error_msg,
+                                    execution_time=execution_time,
+                                    status=ToolCallStatus.FAILED
+                                )
+
+                                # Publish error
+                                await self._publish("tool_call_complete", {
+                                    "tool_index": idx,
+                                    "tool_name": tool_name,
+                                    "status": "failed",
+                                    "error": error_msg,
+                                    "execution_time": execution_time,
+                                })
+
+                                # Add error to messages
+                                messages.append({
+                                    "role": "assistant",
+                                    "tool_calls": [{
+                                        "id": tc["id"],
+                                        "type": "function",
+                                        "function": {
+                                            "name": tool_name,
+                                            "arguments": tc["arguments"]
+                                        }
+                                    }]
+                                })
+                                messages.append({
+                                    "role": "tool",
+                                    "tool_call_id": tc["id"],
+                                    "content": json.dumps({"error": error_msg}),
+                                })
 
                     # Continue conversation
                     continue
 
                 # Save assistant message
+                assistant_message = None
                 if content_buffer:
-                    await self.save_message(MessageRole.ASSISTANT, content_buffer)
+                    assistant_message = await self.save_message(MessageRole.ASSISTANT, content_buffer)
+
+                    # Update tool calls with message_id if they exist
+                    if valid_tool_calls:
+                        for idx, tc in valid_tool_calls.items():
+                            await self.save_tool_call(
+                                tool_call_id=tc["id"],
+                                tool_name=tc["name"],
+                                message_id=str(assistant_message.id)
+                            )
 
                 # Conversation complete
                 await self._publish("done", {

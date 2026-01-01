@@ -260,5 +260,9 @@ def get_tool_function(tool_name: str) -> Callable:
 
 async def execute_tool(tool_name: str, **kwargs) -> Any:
     """Execute a tool with given parameters"""
+    print(f"[DEBUG] execute_tool called: {tool_name} with kwargs: {kwargs}")
     tool_func = get_tool_function(tool_name)
-    return await tool_func(**kwargs)
+    print(f"[DEBUG] tool_func: {tool_func}")
+    result = await tool_func(**kwargs)
+    print(f"[DEBUG] execute_tool result for {tool_name}: {result}")
+    return result

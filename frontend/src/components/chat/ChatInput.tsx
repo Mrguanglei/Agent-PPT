@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Paperclip, StopCircle, Mic, Image as ImageIcon } from 'lucide-react';
@@ -13,7 +14,7 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export function ChatInput({ onSend, onStop, disabled, placeholder = '输入您的问题或指令...' }: ChatInputProps) {
+export const ChatInput = React.memo(function ChatInput({ onSend, onStop, disabled, placeholder = '输入您的问题或指令...' }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -145,4 +146,4 @@ export function ChatInput({ onSend, onStop, disabled, placeholder = '输入您�
       </p>
     </div>
   );
-}
+});

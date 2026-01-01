@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Image, FileText, Presentation, Rocket, Target, Lightbulb, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ const MODES = [
   { id: 'app', label: '网页应用', active: false },
 ];
 
-export function WelcomeScreen({ onSend }: { onSend: (content: string) => void }) {
+export const WelcomeScreen = React.memo(function WelcomeScreen({ onSend }: { onSend: (content: string) => void }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[80vh] px-4 py-12">
       {/* Logo & Title */}
@@ -111,4 +112,4 @@ export function WelcomeScreen({ onSend }: { onSend: (content: string) => void })
       </div>
     </div>
   );
-}
+});

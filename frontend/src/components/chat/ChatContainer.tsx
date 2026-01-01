@@ -26,7 +26,58 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentToolCalls, setCurrentToolCalls] = useState<ToolCallInMessage[]>([]);
 
-  const { isOpen: isToolPanelOpen, clearToolCalls } = useToolPanelStore();
+  const { isOpen: isToolPanelOpen, clearToolCalls, addToolCall, updateToolCall } = useToolPanelStore();
+
+  // Load tool calls history when chat changes
+  const loadToolCallsHistory = useCallback(async () => {
+    if (!chatId) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/v1/agent/tool-calls/${chatId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.tool_calls && Array.isArray(data.tool_calls)) {
+          // Clear existing tool calls and add historical ones
+          clearToolCalls();
+
+          // Group tool calls by message_id and add them
+          const toolCallsByMessage = new Map<string, any[]>();
+
+          data.tool_calls.forEach((tc: any) => {
+            if (tc.message_id) {
+              if (!toolCallsByMessage.has(tc.message_id)) {
+                toolCallsByMessage.set(tc.message_id, []);
+              }
+              toolCallsByMessage.get(tc.message_id)!.push(tc);
+            }
+          });
+
+          // Add tool calls to the store (they will be displayed when the corresponding message is shown)
+          toolCallsByMessage.forEach((toolCalls, messageId) => {
+            toolCalls.forEach((tc, index) => {
+              addToolCall({
+                index,
+                name: tc.tool_name,
+                status: tc.status,
+                params: tc.tool_params,
+                result: tc.tool_result,
+                error: tc.error_message,
+                executionTime: tc.execution_time,
+              });
+            });
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load tool calls history:', error);
+    }
+  }, [chatId, API_URL, clearToolCalls, addToolCall]);
 
   const streamingContentRef = useRef(streamingContent);
   const currentToolCallsRef = useRef(currentToolCalls);
@@ -48,6 +99,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     const loadMessages = async () => {
       setIsLoading(true);
       try {
+        // Load messages
         const response = await fetch(`${API_URL}/api/v1/chats/${chatId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -58,6 +110,9 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
           const data = await response.json();
           setMessages(data.messages || []);
         }
+
+        // Load tool calls history
+        await loadToolCallsHistory();
       } catch (error) {
         console.error('Failed to load messages:', error);
       } finally {
@@ -66,17 +121,17 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     };
 
     loadMessages();
-  }, [chatId]);
+  }, [chatId, loadToolCallsHistory]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, []);
+  }, []); // scrollRef is stable, no dependencies needed
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingContent, currentToolCalls, scrollToBottom]);
+  }, [messages.length, streamingContent.length, currentToolCalls.length]); // Only depend on lengths to avoid function reference issues
 
   const handleComplete = useCallback(() => {
     const content = streamingContentRef.current;
@@ -101,13 +156,13 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     }
     setIsStreaming(false);
     setAgentRunId(null);
-  }, []);
+  }, []); // Empty deps array since we use refs
 
   const handleError = useCallback((error: string) => {
     console.error('Agent error:', error);
     setIsStreaming(false);
     setAgentRunId(null);
-  }, []);
+  }, []); // No external dependencies needed
 
   const handleStop = useCallback(async () => {
     if (!agentRunId) return;
@@ -124,22 +179,26 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
       console.error('Failed to stop agent:', error);
     }
 
-    setIsStreaming(false);
-    setAgentRunId(null);
-  }, [agentRunId]);
+    // Don't immediately clear state - let the stream close naturally
+    // The stream will close and call onClose when the agent actually stops
+    console.log('Stop signal sent, waiting for agent to stop...');
+  }, [agentRunId, API_URL]); // Include API_URL as dependency
 
   const handleMessage = useCallback((content: string) => {
     setStreamingContent((prev) => prev + content);
-  }, []);
+  }, []); // No external dependencies
 
   const handleToolCallStart = useCallback((index: number, name: string) => {
-    const newToolCall: ToolCallInMessage = {
-      index,
-      name,
-      status: 'running',
-    };
-    setCurrentToolCalls((prev) => [...prev, newToolCall]);
-  }, []);
+    // Delay tool call display to ensure text content is shown first
+    setTimeout(() => {
+      const newToolCall: ToolCallInMessage = {
+        index,
+        name,
+        status: 'running',
+      };
+      setCurrentToolCalls((prev) => [...prev, newToolCall]);
+    }, 100); // Small delay to ensure text content is rendered first
+  }, []); // No external dependencies
 
   const handleToolCallProgress = useCallback((index: number, name: string, status: any, params?: any) => {
     setCurrentToolCalls((prev) =>
@@ -147,7 +206,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
         tc.index === index ? { ...tc, status, params } : tc
       )
     );
-  }, []);
+  }, []); // No external dependencies
 
   const handleToolCallComplete = useCallback((index: number, name: string, status: any, result?: any, error?: string) => {
     setCurrentToolCalls((prev) =>
@@ -157,7 +216,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
           : tc
       )
     );
-  }, []);
+  }, []); // No external dependencies
 
   useAgentStream({
     agentRunId,
@@ -169,7 +228,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
     onError: handleError,
   });
 
-  const handleSend = async (content: string) => {
+  const handleSend = useCallback(async (content: string) => {
     // Clear previous tool calls when sending new message
     clearToolCalls();
 
@@ -208,7 +267,7 @@ export function ChatContainer({ chatId }: ChatContainerProps) {
       console.error('Error sending message:', error);
       setIsStreaming(false);
     }
-  };
+  }, [chatId, API_URL]); // clearToolCalls is stable from zustand store
 
   const isInitialState = !chatId && messages.length === 0;
 

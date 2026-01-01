@@ -94,6 +94,11 @@ def process_agent_run(agent_run_id: str, chat_id: str, user_id: str, message: st
         finally:
             # Clean up this task's database connections
             await engine.dispose()
+            # Clean up Redis connections to prevent event loop issues
+            try:
+                await redis_client.disconnect()
+            except Exception:
+                pass
 
     # Run async function in a new event loop
     try:

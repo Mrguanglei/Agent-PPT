@@ -45,33 +45,25 @@ export function ToolCallButton({ index, name, status, onClick }: ToolCallButtonP
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ scale: 1.02 }}
       onClick={onClick}
-      className={cn(
-        "w-full text-left px-3 py-2 rounded-lg border transition-all duration-200",
-        "flex items-center gap-3 text-sm",
-        "hover:border-blue-400 hover:shadow-sm",
-        isPending && "bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300",
-        isRunning && "bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-300",
-        isSuccess && "bg-green-100 border-green-300 text-green-700 dark:bg-green-900/30 dark:border-green-700 dark:text-green-300",
-        isFailed && "bg-red-100 border-red-300 text-red-700 dark:bg-red-900/30 dark:border-red-700 dark:text-red-300"
-      )}
+      className="inline-flex items-center gap-1.5 h-8 px-2 py-1.5 text-xs text-muted-foreground bg-card hover:bg-card/80 rounded-lg transition-colors cursor-pointer border border-neutral-200 dark:border-neutral-700/50 whitespace-nowrap"
     >
-      {/* Icon */}
-      <span className="text-base flex-shrink-0">
-        {TOOL_ICONS[name] || '🔧'}
-      </span>
-
-      {/* Tool Name */}
-      <span className="flex-1 font-medium">
+      <div className='flex items-center justify-center'>
+        <span className="text-sm">
+          {TOOL_ICONS[name] || '🔧'}
+        </span>
+      </div>
+      <span className="font-mono text-xs text-foreground">
         {TOOL_LABELS[name] || name}
       </span>
-
-      {/* Status Indicator */}
-      <span className="flex-shrink-0">
-        {isPending && <Clock className="w-4 h-4 text-gray-400" />}
-        {isRunning && <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />}
-        {isSuccess && <CheckCircle className="w-4 h-4 text-green-500" />}
-        {isFailed && <XCircle className="w-4 h-4 text-red-500" />}
-      </span>
+      {isRunning && (
+        <Loader2 className="h-3.5 w-3.5 text-blue-500 animate-spin animation-duration-2000 ml-1" />
+      )}
+      {isSuccess && (
+        <CheckCircle className="h-3.5 w-3.5 text-green-500 ml-1" />
+      )}
+      {isFailed && (
+        <XCircle className="h-3.5 w-3.5 text-red-500 ml-1" />
+      )}
     </motion.button>
   );
 }

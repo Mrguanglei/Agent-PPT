@@ -18,6 +18,7 @@ export interface ToolCallInMessage {
   params?: Record<string, any>;
   result?: any;
   error?: string;
+  executionTime?: number;
 }
 
 export interface Message {
